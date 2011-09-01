@@ -1,0 +1,60 @@
+<gui>
+  <properties>
+    <project>iTunes</project>
+    <designer>Florent Pillet</designer>
+    <size>
+      <portrait width="768" height="1024" />
+      <landscape width="1024" height="768" />
+    </size>
+    <controlsystem connectionStatus="0" disconnectionStatus="0">
+      <hostname>192.168.0.12</hostname>
+      <commandPort>8020</commandPort>
+    </controlsystem>
+    <imagefolder>
+    </imagefolder>
+    <debug loaderrors="0" connectionerrors="0" />
+  </properties>
+  <systems>
+    <system name="iTunesPairingServer" ip="192.168.2.50" origin="8090" port="0" protocol="tcp" alwayson="0" accept="1" ssl="0" maxconnections="0" heartbeatRx="" heartbeatTx="" heartbeatMode="-1" eom="" connectionStatus="0" disconnectionStatus="0">
+      <cmd name="SelectInstance" js="selectInstance(data);" jsSendsCommand="True">[name]</cmd>
+      <fb name="Pairing request" regex="GET /pair\?pairingcode=[0-9A-F]+&amp;servicename=[0-9A-F]+ " />
+      <fb name="All traffic" regex=".*" />
+    </system>
+  </systems>
+  <themes>
+    <theme type="background" name=".landscape"><![CDATA[background-color: #8080FF;]]></theme>
+    <theme type="button" name=".btn_sqr_sml[state='0']"><![CDATA[padding: 0px 15px 8px 15px; -webkit-border-image: url(btn_sqr_sml_off.png) 0 15 8 15; text-shadow: rgba(255,255,255,1) 1px 1px 1px; color: Black; font-size: 20px; font-family: 'Verdana'; font-weight: bold; font-style: none; text-decoration: none; text-align: center; vertical-align: middle; display: table-cell; box-sizing: border-box; -webkit-box-sizing: border-box; -webkit-tap-highlight-color:rgba(0,0,0,0);]]></theme>
+    <theme type="button" name=".btn_sqr_sml[state='1']"><![CDATA[padding: 0px 15px 8px 15px; -webkit-border-image: url(btn_sqr_sml_on.png) 0 15 8 15; text-shadow: rgba(255,255,255,1) 1px 1px 1px; color: Black; font-size: 20px; font-family: 'Verdana'; font-weight: bold; font-style: none; text-decoration: none; text-align: center; vertical-align: middle; display: table-cell; box-sizing: border-box; -webkit-box-sizing: border-box; -webkit-tap-highlight-color:rgba(0,0,0,0);]]></theme>
+    <theme type="input" name=".input_blank"><![CDATA[ border-width: 0px; color: White; font-size: 12px; font-family: 'Arial'; text-align: left; vertical-align: middle; font-weight: bold; font-style: none; text-decoration: none; display: table-cell;]]></theme>
+    <theme type="text" name=".Title_C"><![CDATA[ text-shadow: rgba(0,0,0,1) 1px -1px 1px; color: White; font-size: 24px; font-family: 'Arial'; text-align: center; vertical-align: middle; font-weight: bold; font-style: none; text-decoration: none; display: table-cell;]]></theme>
+    <theme type="text" name=".List_Item"><![CDATA[ color: White; font-size: 14px; font-family: 'Arial'; text-align: left; vertical-align: middle; font-weight: normal; font-style: none; text-decoration: none; display: table-cell;]]></theme>
+    <theme type="list" name=".list_FF8040"><![CDATA[background-color: #FF8040;]]></theme>
+  </themes>
+  <tokens>
+    <token name="iTunesPairedServices" value="" persist="1" />
+  </tokens>
+  <scripts>
+    <script name="itunes.js" />
+    <script name="gui.js" />
+  </scripts>
+  <page name="Main" j="0" transition="None" subtype="None" time="0" ease="" start="1">
+    <portrait />
+    <landscape t="landscape">
+      <txt j="0" x="5" y="24" w="188" h="28" t="Title_C" wrap="False" l="0">iTunes Servers</txt>
+      <list j="1" x="7" y="62" w="300" h="209" t="list_FF8040" headerSub="" titleSub="" contentSub="iTunes_Instance" footerSub="" orientation="v" l="0" swipedelete="0" />
+      <btn j="0" x="204" y="26" w="101" h="30" t="btn_sqr_sml" flip="None" sim="0" l="0" s="1" js="start();">
+        <inactive s="0">start</inactive>
+        <active s="0">start</active>
+      </btn>
+    </landscape>
+  </page>
+  <subpage name="iTunes_Instance" w="300" h="40">
+    <txt j="1" x="2" y="3" w="295" h="32" t="List_Item" wrap="False" l="0">iTunes Server</txt>
+    <btn j="2" x="2" y="2" w="299" h="36" t="" flip="None" sim="0" l="0" s="1" cmd="SelectInstance">
+      <inactive s="0">
+      </inactive>
+      <active s="0">
+      </active>
+    </btn>
+  </subpage>
+</gui>
