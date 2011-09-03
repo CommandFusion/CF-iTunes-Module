@@ -170,7 +170,7 @@ var iTunes = {
 	 */
 	// Pairing
 	publishing: false,
-	pairingName: "iViewer Remote",		// the remote name that shows up in iTunes
+	pairingName: "iViewer",				// the remote name that shows up in iTunes (we add the actual device name to this name)
 	pairingGUID: undefined,				// the string we use as the unique pairing GUID (automatically generated from device UDID)
 	pairingCode: "0000",				// the pairing code you want to use. Set this
 	pairingSystem: "",					// the local System we use to receive pairing requests
@@ -178,6 +178,7 @@ var iTunes = {
 	pairedServices: [],					// the names (iTunes UIDs) of the services we are paired with
 	activePairedServices: [],			// the list of currently active (on the network) iTunes instances we are paired with
 	activeServers: [],				// the current active iTunes instances on the network (an array on iTunesInstance objects)
+	lookupActive: false,
 
 	/* -------------------------------
 	 * SETUP
@@ -208,13 +209,22 @@ var iTunes = {
 			var that = this;
 			CF.getJoin(CF.GlobalTokensJoin, function(j, v, t) {
 				// Check whether the global token is defined in the GUI
-				if (t["iTunesPairedServices"] !== undefined) {
-					// Load the list of known paired services
-					that.pairedServices = t["iTunesPairedServices"].split("|");
+				var savedPairings = t["iTunesPairedServices"];
+				if (savedPairings !== undefined) {
+					if (savedPairings.length !== 0) {
+						// Load the list of known paired services
+						that.pairedServices = savedPairings.split("|");
+						CF.log("iTunes setup complete - pairing GUID=" + that.pairingGUID + ", code=" + that.pairingCode);
+						if (that.pairedServices.length !== 0) {
+							CF.log("Known paired services:");
+							CF.logObject(that.pairedServices);
+						}
+					} else {
+						CF.log("No saved paired services");
+					}
 
 					// We can now start accepting further pairing requests.
 					that.startAcceptingPairingRequests();
-					CF.log("iTunes setup complete - pairing GUI=" + that.pairingGUID + ", code=" + that.pairingCode);
 				} else {
 					CF.log("You need to define a persisting global token named iTunesPairedServices for the iTunes module to use.");
 				}
@@ -260,14 +270,15 @@ var iTunes = {
 				this.pairingCode = pairingCode;
 			}
 			
+			var publishedName = this.pairingName + " (" + CF.device.name + ")";
 			// Prepare the TXT record and publish (all components must be strings)
 			var txtData = {
-				"DvNm": this.pairingName,
-				"RemV": "10000",
+				"DvNm": publishedName,
 				"DvTy": CF.device.model,
+				"Pair": this.pairingGUID,
+				"RemV": "10000",
 				"RemN": "Remote",
-				"txtvers": "1",
-				"Pair": this.pairingGUID
+				"txtvers": "1"
 			};
 			if (CF.debug) {
 				CF.log("Start advertising iViewer Remote with pairing ID " + this.pairingGUID);
@@ -301,18 +312,27 @@ var iTunes = {
 			for (var i=0; i < iTunes.pairingCode.length; i++) {
 				validationStr += iTunes.pairingCode.charAt(i) + "\x00";
 			}
+			CF.log("Verifiying validation hash");
 			CF.hash(CF.Hash_MD5, validationStr, function(validationHash) {
 				if (validationHash == hash) {
 					// The pairing code is valid, remember this pairing in the
 					// global token and send confirmation
+					CF.log("Hash is valid, pairing complete, sending pairing response");
 					iTunes.pairedServiceName = matches[2];
+					
+					// Prepare the pairing valid response. Our pairing GUID must be stuffed as a binary string
+					var binaryGUID = "";
+					for (var i=0; i < 8; i++) {
+						binaryGUID += String.fromCharCode(parseInt(iTunes.pairingGUID.substr(2*i, 2), 16));
+					}
 					var reply = {
 						"cmpa": {
-							"cmnm": iTunes.pairingName,
+							"cmnm": this.pairingName + " (" + CF.device.name + ")",
 							"cmty": CF.device.model,
-							"cmpg": "00000001"
+							"cmpg": binaryGUID
 						}
 					};
+					
 					// Send the response to iTunes
 					var response = iTunes.encodeDAAP(reply);
 					CF.send(iTunes.pairingSystem, "HTTP/1.1 200 OK\r\nContent-Length: "+response.length.toString()+"\r\n\r\n" + response);
@@ -321,6 +341,7 @@ var iTunes = {
 					iTunes.pairedServices.push(matches[2]);
 					CF.setToken(CF.GlobalTokensJoin, "iTunesPairedServices", iTunes.pairedServices.join("|"));
 				} else {
+					CF.log("Hash is invalid, denying pairing");
 					CF.send(iTunes.pairingSystem, "HTTP/1.1 401 Unauthorized\r\n\r\n");
 				}
 			});
@@ -334,11 +355,17 @@ var iTunes = {
 	//
 	startNetworkLookup: function(callback) {
 		// Call this function once to start browsing for live instances of iTunes on the network
-		iTunes.activeServers = [];
-		iTunes.activePairedServices = [];
-		CF.startLookup("_daap._tcp.", "", function(added, removed, error) {
+		CF.log("Starting iTunes network lookup");
+		if (this.lookupActive) {
+			CF.log("-> a lookup is already active");
+			return;
+		}
+		this.lookupActive = true;
+		this.activeServers = [];
+		this.activePairedServices = [];
+		CF.startLookup("_touch-able._tcp.", "", function(added, removed, error) {
 			function IDForService(service) {
-				var serviceID = service.data["MID"];
+				var serviceID = service.name;
 				if (serviceID !== undefined) {
 					var matches = serviceID.match(/[0-9A-F]{16}/);
 					if (matches.length > 0) {
@@ -359,6 +386,7 @@ var iTunes = {
 			var i,len,service;
 			for (i=0, len=added.length; i < len; i++) {
 				service = added[i];
+				service.displayName = service.data["CtlN"];
 				iTunes.activeServers.push(service);
 				var id = IDForService(service);
 				if (id !== null) {
@@ -372,6 +400,7 @@ var iTunes = {
 			// remove disappearing services from the list
 			for (i=0, len=removed.length; i < len; i++) {
 				service = removed[i];
+				service.displayName = service.data["CtlN"];
 				// remove service from active iTunes instances
 				for (var j=0, lj=iTunes.activeServers.length; j < lj; j++) {
 					if (iTunes.activeServers[j].name == service.name) {
@@ -391,7 +420,8 @@ var iTunes = {
 
 	stopNetworkLookup: function() {
 		// Call this function to stop updating the list of iTunes instances on the network
-		CF.stopLookup(".daap.tcp.", "");
+		CF.stopLookup(".touch-able.tcp.", "");
+		this.lookupActive = false;
 	}
 };
 

@@ -7,8 +7,12 @@ var gui = {
 	server: undefined
 };
 
-function start() {
+function startBrowsingForITunes() {
 	iTunes.startNetworkLookup(networkLookupCallback);
+}
+
+function stopBrowsingForITunes() {
+	iTunes.stopNetworkLookup();
 }
 
 function networkLookupCallback(added, removed) {
@@ -17,7 +21,7 @@ function networkLookupCallback(added, removed) {
 		gui.instances.push(added[i]);
 		CF.listAdd("l1", [
 			{	// add one item
-				s1: added[i].name,
+				s1: added[i].displayName,
 				d2: {
 					tokens: {"[name]": added[i].name}
 				}
