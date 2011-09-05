@@ -107,7 +107,7 @@ var iTunesInstance = function(instance) {
 		// If no error, error message is null
 
 		// Build the URL
-		var url = "daap://" + getAddress() + "/" + command;
+		var url = "http://" + getAddress() + ":3689/" + command;
 		var args = [];
 		if (params.length > 0) {
 			for (var prop in params) {
@@ -115,21 +115,27 @@ var iTunesInstance = function(instance) {
 					var v = params[prop];
 					var t = typeof(v);
 					if (t == "string" || t=="number" || t=="bool") {
-						args.push(prop+"="+t.toString());
+						args.push(v.toString());
 					}
 				}
 			}
 			if (args.length > 0) {
-				url += "?" + encodeURIComponent(args.join("&"));
+				url += "?" + args.join("&");
 			}
 		}
 
 		// Send the request
 		var that = this;
-		CF.request(url, function(status, headers, body) {
+		CF.request(url, "GET",
+					{"Client-DAAP-Version": "3.10", 
+					"Accept-Encoding": "gzip",
+					"Accept": "*/*",
+					"User-Agent": "Remote",
+					"Viewer-Only-Client": "1"},
+					function(status, headers, body) {
 			if (status == 200) {
 				// Call the callback with the returned object
-				callback.apply(null, [that.decodeDAAP(body), null]);
+				callback.apply(null, [decodeDAAP(body), null]);
 			} else {
 				// Call the callback with an error
 				callback.apply(null, [null, "Request failed with status " + status]);
@@ -142,7 +148,7 @@ var iTunesInstance = function(instance) {
 	 * -------------------------------
 	 */
 	self.connect = function() {
-		// First get server info
+		//First get server info
 		sendDAAPRequest("server-info", [], function(result, error) {
 			if (error !== null) {
 				if (CF.debug) {
@@ -151,6 +157,19 @@ var iTunesInstance = function(instance) {
 				}
 			} else {
 				CF.log("Received server-info:");
+				CF.logObject(result);
+			}
+		});
+		
+		var pairingrequest = "pairing-guid=0x" + iTunes.pairingGUID; 
+		sendDAAPRequest("login",[pairingrequest], function(result, error) {
+			if (error !== null) {
+				if (CF.debug) {
+					CF.log("Trying to get session info from " + description());
+					CF.log("Error = " + error);
+				}
+			} else {
+				CF.log("Received session info:");
 				CF.logObject(result);
 			}
 		});
