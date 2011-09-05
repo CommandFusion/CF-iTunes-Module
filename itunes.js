@@ -78,27 +78,37 @@ var iTunesInstance = function(instance) {
 		}
 		return "<iTunesInstance " + name + " @ " + getAddress() + ">";
 	}
-
-	function decodeDAAP(str) {
+	
+	function decodeDAAP(str, obj) {
 		// Decode a DAAP packet into a full-fledged object.
 		if (str.length < 8) {
 			return null;
 		}
-		var obj = {};
+		
+		if(obj == null) {
+			obj={};
+		}
+		
 		var prop = str.substr(0, 4);
 		var propLen = (str.charCodeAt(4) << 24) | (str.charCodeAt(5) << 16) | (str.charCodeAt(6) << 8) | str.charCodeAt(7);
 		if (iTunesGlobals.daapContainerTypes.indexOf(prop) == -1) {
 			// not a container: return value contents
-			obj[prop] = str.substr(8);
+			//obj[prop] = str.substr(8);
+			var daapCont = str.substr(8, propLen);
+			obj[prop] = daapCont;
+			//CF.log(prop + " -> " +daapCont); 
+			decodeDAAP(str.substr(8+propLen), obj);
 		} else {
 			// container: decode subcontents
-			var cont = decodeDAAP(str.substr(8));
-			if (cont !== null) {
-				obj[prop] = cont;
-			}
+			
+			var cont = decodeDAAP(str.substr(8),obj);
+			
 		}
+		
 		return obj;
+		
 	}
+	
 
 	function sendDAAPRequest(command, params, callback) {
 		// Send a request to iTunes, wait for result, decode DAAP object and pass it to callback
