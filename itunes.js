@@ -25,7 +25,7 @@ NOTE: if you don't follow exactly the instructions above, this module will not w
 =========================================================================
 */
 var iTunesGlobals = {
-	daapContainerTypes: "msrv mccr mdcl mlog mupd mlcl mlit apso aply"
+	daapContainerTypes: "msrv mccr mdcl mlog mupd mlcl mlit apso aply cmst"
 };
 
 /* ---------------------------------------------------------------------
@@ -46,7 +46,10 @@ var iTunesInstance = function(instance) {
 		connected: false,					// set to true once we are logged in and can talk
 		needsPassword: false,				// set to true if this instance requires a password for login
 
-		service: instance					// the actual iTunes service description
+		service: instance,					// the actual iTunes service description
+		sessionID: "",
+		songStatus: [],
+		revision: 1
 	};
 
 	//
@@ -149,10 +152,48 @@ var iTunesInstance = function(instance) {
 			} else {
 				// Call the callback with an error
 				callback.apply(null, [null, "Request failed with status " + status]);
+				if (status == -1){
+					//when timing out having to log in again :/
+					self.revision=1;
+					itunesLogin();
+				}
+				
+				
 			}
 		});
 	}
 
+	function itunesLogin() {
+	
+		var pairingrequest = "pairing-guid=0x" + iTunes.pairingGUID; 
+		sendDAAPRequest("login",[pairingrequest], function(result, error) {
+			if (error !== null) {
+				if (CF.debug) {
+					CF.log("Trying to get login info from " + description());
+					CF.log("Error = " + error);
+				}
+			} else {
+				CF.log("Login session info:");
+				CF.logObject(result);
+				
+				//Takes a DAAP packet obj and then extracts the SessionID
+				var session = result["mlid"];
+				var intSession = ((session.charCodeAt(0) << 24) | (session.charCodeAt(1) << 16) | (session.charCodeAt(2) << 8) | session.charCodeAt(3));
+				self.sessionID = intSession;
+				
+				//starts polling status
+				self.status(gui.joinStart);
+			}
+		});
+	
+	}
+	
+	function getArtwork() {
+	
+		
+	
+	}
+	
 	/* -------------------------------
 	 * Public functions
 	 * -------------------------------
@@ -171,18 +212,97 @@ var iTunesInstance = function(instance) {
 			}
 		});
 		
-		var pairingrequest = "pairing-guid=0x" + iTunes.pairingGUID; 
-		sendDAAPRequest("login",[pairingrequest], function(result, error) {
-			if (error !== null) {
-				if (CF.debug) {
-					CF.log("Trying to get session info from " + description());
-					CF.log("Error = " + error);
-				}
-			} else {
-				CF.log("Received session info:");
-				CF.logObject(result);
-			}
-		});
+		
+		//Login into server
+		itunesLogin();
+	};
+	
+	self.status = function(joinStart) {
+		var sessionParam = "session-id=" + self.sessionID;
+	
+		sendDAAPRequest("ctrl-int/1/playstatusupdate", ["revision-number=" + self.revision, sessionParam], function(result,error) {
+					if (error !== null) {
+						if (CF.debug) {
+							CF.log("Trying to get playing info from " + description());
+							CF.log("Error = " + error);
+						}
+					} else {
+						CF.log("Received playing info:");
+						CF.logObject(result);
+						
+						//package up data for return
+						var status = {};
+						status["artist"] = result["cana"];
+						status["song"] = result["cann"];
+						status["album"] = result["canl"];
+						
+						if(result["caps"].charCodeAt(0) == 3) {
+							status["playing"] = 0;
+						}else if(result["caps"].charCodeAt(0) == 4) {
+							status["playing"] = 1;
+						}
+						
+						self.revision = ((result["cmsr"].charCodeAt(0) << 24) | (result["cmsr"].charCodeAt(1) << 16) | (result["cmsr"].charCodeAt(2) << 8) | (result["cmsr"].charCodeAt(3)));
+						self.currentStatus = status;
+						
+						//get artwork
+						var url = "http://" + getAddress() + ":3689/" + "ctrl-int/1/nowplayingartwork?mw=320&mh=320&session-id=" + self.sessionID;
+		
+						
+						//info to data
+						CF.setJoins([
+							{ join:"s"+joinStart, value:self.currentStatus["artist"] + " - " + self.currentStatus["song"]},
+							{ join:"d"+joinStart, value:self.currentStatus["playing"]},
+							{ join:"s"+(parseInt(joinStart)+1), value:url}
+						]);	
+						self.status(joinStart);
+						
+					}
+					
+				});
+				
+				/*spams out everything
+				sendDAAPRequest("ctrl-int/1/nowplayingartwork", [sessionParam, "mw=320", "mh=320"], function(result,error) {
+					if (error !== null) {
+						if (CF.debug) {
+							CF.log("Trying to get artwork from " + description());
+							CF.log("Error = " + error);
+						}
+					} else {
+						CF.log("Artwork " + description());
+						CF.logObject(result);
+					}
+				
+				});
+				*/
+				
+		
+	}
+	
+	self.action = function(cmd){
+		var sessionParam = "session-id=" + self.sessionID;
+	
+	
+		switch(cmd){
+		
+			case "playPause":
+				sendDAAPRequest("ctrl-int/1/playpause", [sessionParam], function(result,error) {
+					if (error !== null) {
+						if (CF.debug) {
+							CF.log("Trying to pause/play from " + description());
+							CF.log("Error = " + error);
+						}
+					} else {
+						CF.log("paused played" + description());
+						CF.logObject(result);
+					}
+				
+				});
+				break;
+				
+			default:
+				CF.log("Incorrect Command");
+		}
 	};
 	
 	return self;

@@ -4,7 +4,8 @@ CF.userMain = function() {
 
 var gui = {
 	instances: [],
-	server: undefined
+	server: undefined,
+	joinStart: "10"
 };
 
 function startBrowsingForITunes() {
@@ -58,4 +59,9 @@ function selectInstance(name) {
 			return;
 		}
 	}
+}
+
+function itunesAction(action) {
+	//does action
+	gui.server.action(action);
 }
