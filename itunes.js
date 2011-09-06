@@ -220,7 +220,7 @@ var iTunesInstance = function(instance) {
 	self.status = function(joinStart) {
 		var sessionParam = "session-id=" + self.sessionID;
 	
-		sendDAAPRequest("ctrl-int/1/playstatusupdate", ["revision-number=" + self.revision, sessionParam], function(result,error) {
+		sendDAAPRequest("ctrl-int/1/playstatusupdate", ["revision-number=" + self.revision, "daap-no-disconnect=1", sessionParam], function(result,error) {
 					if (error !== null) {
 						if (CF.debug) {
 							CF.log("Trying to get playing info from " + description());
@@ -296,7 +296,37 @@ var iTunesInstance = function(instance) {
 						CF.log("paused played" + description());
 						CF.logObject(result);
 					}
+			
+				});
+				break;
 				
+			case "next":
+				sendDAAPRequest("ctrl-int/1/nextitem", [sessionParam], function(result,error) {
+					if (error !== null) {
+						if (CF.debug) {
+							CF.log("Trying to nextitem from " + description());
+							CF.log("Error = " + error);
+						}
+					} else {
+						CF.log("nextitem " + description());
+						CF.logObject(result);
+					}
+			
+				});
+				break;
+				
+			case "prev":
+				sendDAAPRequest("ctrl-int/1/previtem", [sessionParam], function(result,error) {
+					if (error !== null) {
+						if (CF.debug) {
+							CF.log("Trying to previtem from " + description());
+							CF.log("Error = " + error);
+						}
+					} else {
+						CF.log("previtem " + description());
+						CF.logObject(result);
+					}
+			
 				});
 				break;
 				

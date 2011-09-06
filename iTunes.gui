@@ -54,8 +54,23 @@
           <img x="23" y="12" w="32" h="32">transports_sml_60_wht.png</img>
         </active>
       </btn>
-      <txt j="10" x="509" y="231" w="218" h="100" t="Title_C" wrap="False" l="0">Artist - Song</txt>
-      <img x="475" y="385" w="344" h="305" j="11" clickthrough="0" refresh="0" l="0" noCache="0" downloadIndicator="0" clearOnURLChange="0" />
+      <txt j="10" x="511" y="217" w="218" h="100" t="Title_C" wrap="False" l="0">Artist - Song</txt>
+      <btn j="10" x="666" y="108" w="75" h="66" t="btn_sqr_sml" flip="None" sim="1" l="0" s="1" js="itunesAction(&quot;next&quot;);">
+        <inactive s="0">
+          <img x="23" y="12" w="32" h="32">transports_sml_05_wht.png</img>
+        </inactive>
+        <active s="0">
+          <img x="23" y="12" w="32" h="32">transports_sml_05_wht.png</img>
+        </active>
+      </btn>
+      <btn j="10" x="506" y="108" w="75" h="66" t="btn_sqr_sml" flip="None" sim="1" l="0" s="1" js="itunesAction(&quot;prev&quot;);">
+        <inactive s="0">
+          <img x="23" y="12" w="32" h="32">transports_sml_04_wht.png</img>
+        </inactive>
+        <active s="0">
+          <img x="23" y="12" w="32" h="32">transports_sml_04_wht.png</img>
+        </active>
+      </btn>
     </landscape>
   </page>
   <subpage name="iTunes_Instance" w="300" h="40">
