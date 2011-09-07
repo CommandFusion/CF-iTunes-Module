@@ -25,7 +25,7 @@ NOTE: if you don't follow exactly the instructions above, this module will not w
 =========================================================================
 */
 var iTunesGlobals = {
-	daapContainerTypes: "msrv mccr mdcl mlog mupd mlcl mlit apso aply cmst"
+	daapContainerTypes: "msrv mccr mdcl mlog mupd mlcl mlit apso aply cmst casp"
 };
 
 /* ---------------------------------------------------------------------
@@ -82,36 +82,51 @@ var iTunesInstance = function(instance) {
 		return "<iTunesInstance " + name + " @ " + getAddress() + ">";
 	}
 	
-	function decodeDAAP(str, obj) {
-		// Decode a DAAP packet into a full-fledged object.
-		if (str.length < 8) {
+	function decodeDAAP(str){
+		
+		if(str.length < 8) {
 			return null;
 		}
+		obj = [];
 		
-		if(obj == null) {
-			obj={};
-		}
-		
+	
+		var tempobj = {};
 		var prop = str.substr(0, 4);
 		var propLen = (str.charCodeAt(4) << 24) | (str.charCodeAt(5) << 16) | (str.charCodeAt(6) << 8) | str.charCodeAt(7);
-		if (iTunesGlobals.daapContainerTypes.indexOf(prop) == -1) {
-			// not a container: return value contents
-			//obj[prop] = str.substr(8);
-			var daapCont = str.substr(8, propLen);
-			obj[prop] = daapCont;
-			//CF.log(prop + " -> " +daapCont); 
-			decodeDAAP(str.substr(8+propLen), obj);
-		} else {
-			// container: decode subcontents
-			
-			var cont = decodeDAAP(str.substr(8),obj);
-			
-		}
-		
-		return obj;
-		
-	}
+
+		var data = str.substr(8, propLen);
 	
+		var rem = str.substr(8+propLen);
+	
+		if(iTunesGlobals.daapContainerTypes.indexOf(prop) !== -1) {
+			obj.push(decodeDAAP(data)); 
+			return obj;
+		} else {
+			tempobj[prop] = data;
+			while (rem.length >= 8) {
+				
+				var temprem = rem;
+				
+				prop = rem.substr(0,4);
+				propLen = (rem.charCodeAt(4) << 24) | (rem.charCodeAt(5) << 16) | (rem.charCodeAt(6) << 8) | rem.charCodeAt(7);
+				data = rem.substr(8, propLen);
+				rem = rem.substr(8+propLen);
+				
+				if(iTunesGlobals.daapContainerTypes.indexOf(prop) !== -1) {
+					obj.push(decodeDAAP(data));
+				} else {
+					tempobj[prop] = data;
+				}
+			}
+			obj.push(tempobj);
+			
+			
+			return obj;
+		}
+	}
+		
+	
+
 
 	function sendDAAPRequest(command, params, callback) {
 		// Send a request to iTunes, wait for result, decode DAAP object and pass it to callback
@@ -146,7 +161,7 @@ var iTunesInstance = function(instance) {
 					"User-Agent": "Remote",
 					"Viewer-Only-Client": "1"},
 					function(status, headers, body) {
-			if (status == 200) {
+			if (status == 200 || status == 204 ) {
 				// Call the callback with the returned object
 				callback.apply(null, [decodeDAAP(body), null]);
 			} else {
@@ -177,10 +192,10 @@ var iTunesInstance = function(instance) {
 				CF.logObject(result);
 				
 				//Takes a DAAP packet obj and then extracts the SessionID
-				var session = result["mlid"];
+				var session = result[0]["mlid"];
 				var intSession = ((session.charCodeAt(0) << 24) | (session.charCodeAt(1) << 16) | (session.charCodeAt(2) << 8) | session.charCodeAt(3));
 				self.sessionID = intSession;
-				
+				CF.log("Session ID = " + intSession);
 				//starts polling status
 				self.status(gui.joinStart);
 			}
@@ -188,9 +203,21 @@ var iTunesInstance = function(instance) {
 	
 	}
 	
-	function getArtwork() {
-	
+	function getSpeakers() {
+	//get the attached speakers option
+		var sessionParam = "session-id=" + self.sessionID;
 		
+		sendDAAPRequest("getspeakers", [sessionParam], function(result, error) {
+			if (error !== null) {
+				if (CF.debug) {
+					CF.log("Trying to get server info from " + description());
+					CF.log("Error = " + error);
+				}
+			} else {
+				CF.log("Received speaker info:");
+				CF.logObject(result);
+			}
+		});
 	
 	}
 	
@@ -217,7 +244,11 @@ var iTunesInstance = function(instance) {
 		itunesLogin();
 	};
 	
+
+	
+	
 	self.status = function(joinStart) {
+	//grabs the status also gets speakers 
 		var sessionParam = "session-id=" + self.sessionID;
 	
 		sendDAAPRequest("ctrl-int/1/playstatusupdate", ["revision-number=" + self.revision, "daap-no-disconnect=1", sessionParam], function(result,error) {
@@ -227,27 +258,29 @@ var iTunesInstance = function(instance) {
 							CF.log("Error = " + error);
 						}
 					} else {
-						CF.log("Received playing info:");
-						CF.logObject(result);
+						CF.log("Received playing info");
+						//CF.logObject(result);
 						
 						//package up data for return
 						var status = {};
-						status["artist"] = result["cana"];
-						status["song"] = result["cann"];
-						status["album"] = result["canl"];
+						status["artist"] = result[0]["cana"];
+						status["song"] = result[0]["cann"];
+						status["album"] = result[0]["canl"];
 						
-						if(result["caps"].charCodeAt(0) == 3) {
+						if(result[0]["caps"].charCodeAt(0) == 3) {
 							status["playing"] = 0;
-						}else if(result["caps"].charCodeAt(0) == 4) {
+						}else if(result[0]["caps"].charCodeAt(0) == 4) {
 							status["playing"] = 1;
 						}
 						
-						self.revision = ((result["cmsr"].charCodeAt(0) << 24) | (result["cmsr"].charCodeAt(1) << 16) | (result["cmsr"].charCodeAt(2) << 8) | (result["cmsr"].charCodeAt(3)));
+						self.revision = ((result[0]["cmsr"].charCodeAt(0) << 24) | (result[0]["cmsr"].charCodeAt(1) << 16) | (result[0]["cmsr"].charCodeAt(2) << 8) | (result[0]["cmsr"].charCodeAt(3)));
 						self.currentStatus = status;
 						
 						//get artwork
 						var url = "http://" + getAddress() + ":3689/" + "ctrl-int/1/nowplayingartwork?mw=320&mh=320&session-id=" + self.sessionID;
 		
+						//gets speakers
+						getSpeakers();
 						
 						//info to data
 						CF.setJoins([
