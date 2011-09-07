@@ -71,6 +71,7 @@
           <img x="23" y="12" w="32" h="32">transports_sml_04_wht.png</img>
         </active>
       </btn>
+      <img x="477" y="317" w="320" h="320" j="11" clickthrough="0" refresh="0" l="0" noCache="1" downloadIndicator="0" clearOnURLChange="0" />
     </landscape>
   </page>
   <subpage name="iTunes_Instance" w="300" h="40">
