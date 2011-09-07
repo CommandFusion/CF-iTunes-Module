@@ -13,6 +13,7 @@
   <systems>
     <system name="iTunesPairingServer" ip="0.0.0.0" origin="8090" port="0" protocol="tcp" alwayson="0" accept="1" ssl="0" maxconnections="0" heartbeatRx="" heartbeatTx="" heartbeatMode="-1" eom="" connectionStatus="0" disconnectionStatus="0">
       <cmd name="SelectInstance" js="selectInstance(data);" jsSendsCommand="True">[name]</cmd>
+      <cmd name="SelectSpeakers" js="selectSpeakers(data);" jsSendsCommand="True">[id]</cmd>
       <fb name="Pairing request" regex="GET /pair\?pairingcode=[0-9A-F]+&amp;servicename=[0-9A-F]+ " />
       <fb name="All traffic" regex=".*" />
     </system>
@@ -25,6 +26,7 @@
     <theme type="text" name=".Title_C"><![CDATA[ text-shadow: rgba(0,0,0,1) 1px -1px 1px; color: White; font-size: 24px; font-family: 'Arial'; text-align: center; vertical-align: middle; font-weight: bold; font-style: none; text-decoration: none; display: table-cell;]]></theme>
     <theme type="text" name=".List_Item"><![CDATA[ color: White; font-size: 14px; font-family: 'Arial'; text-align: left; vertical-align: middle; font-weight: normal; font-style: none; text-decoration: none; display: table-cell;]]></theme>
     <theme type="list" name=".list_FF8040"><![CDATA[background-color: #FF8040;]]></theme>
+    <theme type="list" name=".list_FF0000"><![CDATA[background-color: #FF0000;]]></theme>
   </themes>
   <tokens>
     <token name="iTunesPairedServices" value="" persist="1" />
@@ -72,11 +74,21 @@
         </active>
       </btn>
       <img x="477" y="317" w="320" h="320" j="11" clickthrough="0" refresh="0" l="0" noCache="1" downloadIndicator="0" clearOnURLChange="0" />
+      <list j="10" x="13" y="450" w="300" h="209" t="list_FF0000" headerSub="" titleSub="" contentSub="iTunes_Speakers" footerSub="" orientation="v" l="0" swipedelete="0" />
     </landscape>
   </page>
   <subpage name="iTunes_Instance" w="300" h="40">
     <txt j="1" x="2" y="3" w="295" h="32" t="List_Item" wrap="False" l="0">iTunes Server</txt>
     <btn j="2" x="2" y="2" w="299" h="36" t="" flip="None" sim="0" l="0" s="1" cmd="SelectInstance">
+      <inactive s="0">
+      </inactive>
+      <active s="0">
+      </active>
+    </btn>
+  </subpage>
+  <subpage name="iTunes_Speakers" w="300" h="40">
+    <txt j="1" x="2" y="3" w="295" h="32" t="List_Item" wrap="False" l="0">iTunes Server</txt>
+    <btn j="2" x="2" y="2" w="299" h="36" t="" flip="None" sim="0" l="0" s="1" cmd="SelectSpeakers">
       <inactive s="0">
       </inactive>
       <active s="0">

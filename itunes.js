@@ -55,6 +55,11 @@ var iTunesInstance = function(instance) {
 	//
 	// Private functions
 	//
+	
+	
+	
+	
+	
 	function getAddress() {
 		// Get the actual address of the iTunes instance, depending on whether
 		// we are on IPv4 or IPv6 network.
@@ -205,9 +210,41 @@ var iTunesInstance = function(instance) {
 	
 	}
 	
+	//get hex string for speakers
+	function encodeToHex(str){
+		var r="";
+		var e=str.length;
+		var c=0;
+		var h;
+		while(c<e){
+			h=str.charCodeAt(c++).toString(16);
+			while(h.length<3) h="0"+h;
+				r+=h;
+		}
+		
+		var temp = r;
+		var result = "";
+		while (temp.length > 0){ 
+			index = temp.indexOf("0");
+			if (index >= 0){
+				result += temp.substring(0, index);
+				temp = temp.substring(index + 1)
+			} else { 
+				result += temp;
+				temp = ""
+			}
+
+		}
+
+		return result
+	}
+	
+	
 	function getSpeakers() {
 	//get the attached speakers option
 		var sessionParam = "session-id=" + self.sessionID;
+		//clears list
+		CF.listRemove("l"+gui.joinStart);
 		
 		sendDAAPRequest("getspeakers", [sessionParam], function(result, error) {
 			if (error !== null) {
@@ -217,11 +254,25 @@ var iTunesInstance = function(instance) {
 				}
 			} else {
 				CF.log("Received speaker info:");
-				CF.logObject(result);
+				//CF.logObject(result);
+				
+				for(var i = 0; i < result[0].length-1; i++) {
+					var speakerid = encodeToHex(result[0][i][0]["msma"]);
+					CF.listAdd("l"+gui.joinStart, [
+					{	// add one item
+						s1: result[0][i][0]["minm"],
+						d2: {
+							tokens: {"[id]": speakerid}
+						}
+					}
+					]);
+				}
 			}
 		});
 	
 	}
+	
+
 	
 	/* -------------------------------
 	 * Public functions
@@ -247,7 +298,29 @@ var iTunesInstance = function(instance) {
 	};
 	
 
+	self.setSpeakers = function(id) {
+		var sessionParam = "session-id=" + self.sessionID;
+		
+		if(id == ""){
+			id = "0";
+		}else{
+			id = "0x" + id;
+		}
+		
+		sendDAAPRequest("ctrl-int/1/setspeakers", ["speaker-id="+id, sessionParam], function(result,error) {
+					if (error !== null) {
+						if (CF.debug) {
+							CF.log("Trying to set speakers from " + description());
+							CF.log("Error = " + error);
+						}
+					} else {
+						CF.log("set speakers" + description());
+						CF.logObject(result);
+					}
+			
+				});
 	
+	}
 	
 	self.status = function(joinStart) {
 	//grabs the status also gets speakers 
@@ -281,7 +354,7 @@ var iTunesInstance = function(instance) {
 						//get artwork
 						var url = "http://" + getAddress() + ":3689/" + "ctrl-int/1/nowplayingartwork?mw=320&mh=320&session-id=" + self.sessionID;
 						var artJoin = "s" + (parseInt(joinStart)+1);
-						
+						//headers for the image
 						CF.setToken(artJoin, "HTTP:Client-DAAP-Version", 3.10);
 						CF.setToken(artJoin, "HTTP:Viewer-Only-Client", 1);
 		

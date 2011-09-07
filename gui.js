@@ -12,6 +12,8 @@ function startBrowsingForITunes() {
 	iTunes.startNetworkLookup(networkLookupCallback);
 }
 
+
+
 function stopBrowsingForITunes() {
 	iTunes.stopNetworkLookup();
 }
@@ -59,6 +61,11 @@ function selectInstance(name) {
 			return;
 		}
 	}
+}
+
+function selectSpeakers(id) {
+	// an iTunes instance was selected
+	gui.server.setSpeakers(id);
 }
 
 function itunesAction(action) {
