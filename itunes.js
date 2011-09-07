@@ -55,11 +55,6 @@ var iTunesInstance = function(instance) {
 	//
 	// Private functions
 	//
-	
-	
-	
-	
-	
 	function getAddress() {
 		// Get the actual address of the iTunes instance, depending on whether
 		// we are on IPv4 or IPv6 network.
@@ -86,54 +81,44 @@ var iTunesInstance = function(instance) {
 		}
 		return "<iTunesInstance " + name + " @ " + getAddress() + ">";
 	}
-	
-	function decodeDAAP(str){
-		
+
+	function decodeDAAP(str) {
 		var localObj=[];
 		
-		if(str.length < 8) {
+		if (str == null || str.length < 8) {
 			return null;
 		}
 		obj = [];
 		
-	
 		var tempobj = {};
 		var prop = str.substr(0, 4);
 		var propLen = (str.charCodeAt(4) << 24) | (str.charCodeAt(5) << 16) | (str.charCodeAt(6) << 8) | str.charCodeAt(7);
-
 		var data = str.substr(8, propLen);
-	
 		var rem = str.substr(8+propLen);
 	
-		if(iTunesGlobals.daapContainerTypes.indexOf(prop) !== -1) {
+		if (iTunesGlobals.daapContainerTypes.indexOf(prop) !== -1) {
 			localObj.push(decodeDAAP(data));
 			return localObj;
-		} else {
-			tempobj[prop] = data;
-			while (rem.length >= 8) {
-				
-				var temprem = rem;
-				
-				prop = rem.substr(0,4);
-				propLen = (rem.charCodeAt(4) << 24) | (rem.charCodeAt(5) << 16) | (rem.charCodeAt(6) << 8) | rem.charCodeAt(7);
-				data = rem.substr(8, propLen);
-				rem = rem.substr(8+propLen);
-				
-				if(iTunesGlobals.daapContainerTypes.indexOf(prop) !== -1) {
-					localObj.push(decodeDAAP(data));
-				} else {
-					tempobj[prop] = data;
-				}
-			}
-			localObj.push(tempobj);
-			
-			
-			return localObj;
 		}
-	}
-		
-	
 
+		tempobj[prop] = data;
+		while (rem.length >= 8) {
+			var temprem = rem;
+			prop = rem.substr(0,4);
+			propLen = (rem.charCodeAt(4) << 24) | (rem.charCodeAt(5) << 16) | (rem.charCodeAt(6) << 8) | rem.charCodeAt(7);
+			data = rem.substr(8, propLen);
+			rem = rem.substr(8+propLen);
+			
+			if (iTunesGlobals.daapContainerTypes.indexOf(prop) !== -1) {
+				localObj.push(decodeDAAP(data));
+			} else {
+				tempobj[prop] = data;
+			}
+		}
+		localObj.push(tempobj);
+		
+		return localObj;
+	}
 
 	function sendDAAPRequest(command, params, callback) {
 		// Send a request to iTunes, wait for result, decode DAAP object and pass it to callback
@@ -175,7 +160,7 @@ var iTunesInstance = function(instance) {
 				// Call the callback with an error
 				callback.apply(null, [null, "Request failed with status " + status]);
 				if (status == -1){
-					//when timing out having to log in again :/
+					// when timing out having to log in again :/
 					self.revision=1;
 					itunesLogin();
 				}
@@ -186,7 +171,6 @@ var iTunesInstance = function(instance) {
 	}
 
 	function itunesLogin() {
-	
 		var pairingrequest = "pairing-guid=0x" + iTunes.pairingGUID; 
 		sendDAAPRequest("login",[pairingrequest], function(result, error) {
 			if (error !== null) {
@@ -195,53 +179,36 @@ var iTunesInstance = function(instance) {
 					CF.log("Error = " + error);
 				}
 			} else {
-				CF.log("Login session info:");
-				CF.logObject(result);
-				
-				//Takes a DAAP packet obj and then extracts the SessionID
+				// Takes a DAAP packet obj and then extracts the SessionID
 				var session = result[0][0]["mlid"];
 				var intSession = ((session.charCodeAt(0) << 24) | (session.charCodeAt(1) << 16) | (session.charCodeAt(2) << 8) | session.charCodeAt(3));
 				self.sessionID = intSession;
-				CF.log("Session ID = " + intSession);
-				//starts polling status
+
+				if (CF.debug) {
+					CF.log("Login session info:");
+					CF.logObject(result);
+					CF.log("Session ID = " + intSession);
+				}
+
+				// starts polling status
 				self.status(gui.joinStart);
 			}
 		});
 	
 	}
 	
-	//get hex string for speakers
-	function encodeToHex(str){
-		var r="";
-		var e=str.length;
-		var c=0;
-		var h;
-		while(c<e){
-			h=str.charCodeAt(c++).toString(16);
-			while(h.length<3) h="0"+h;
-				r+=h;
+	// encode a string to ascii-hex. Chars >255 are truncated (high byte ignored)
+	function encodeToHex(str) {
+		var i = 0, n = str.length, c, s = "", h = "0123456789ABCDEF";
+		while (i < n) {
+			c = str.charCodeAt(i++);
+			s += h[(c >> 4) & 0x0f] + h[c & 0x0f];
 		}
-		
-		var temp = r;
-		var result = "";
-		while (temp.length > 0){ 
-			index = temp.indexOf("0");
-			if (index >= 0){
-				result += temp.substring(0, index);
-				temp = temp.substring(index + 1)
-			} else { 
-				result += temp;
-				temp = ""
-			}
-
-		}
-
-		return result
+		return s;
 	}
 	
-	
+	// get the attached speakers option
 	function getSpeakers() {
-	//get the attached speakers option
 		var sessionParam = "session-id=" + self.sessionID;
 		//clears list
 		CF.listRemove("l"+gui.joinStart);
@@ -255,21 +222,18 @@ var iTunesInstance = function(instance) {
 			} else {
 				CF.log("Received speaker info:");
 				//CF.logObject(result);
-				
-				for(var i = 0; i < result[0].length-1; i++) {
-					var speakerid = encodeToHex(result[0][i][0]["msma"]);
-					CF.listAdd("l"+gui.joinStart, [
-					{	// add one item
-						s1: result[0][i][0]["minm"],
+				for (var i=0, r=result[0], n=r.length-1; i < n; i++) {
+					var speakerid = encodeToHex(r[i][0]["msma"]).replace(/0/g,"");
+					CF.listAdd("l"+gui.joinStart, [{
+						// add one item
+						s1: r[i][0]["minm"],
 						d2: {
 							tokens: {"[id]": speakerid}
 						}
-					}
-					]);
+					}]);
 				}
 			}
 		});
-	
 	}
 	
 
@@ -327,110 +291,104 @@ var iTunesInstance = function(instance) {
 		var sessionParam = "session-id=" + self.sessionID;
 	
 		sendDAAPRequest("ctrl-int/1/playstatusupdate", ["revision-number=" + self.revision, "daap-no-disconnect=1", sessionParam], function(result,error) {
-					if (error !== null) {
-						if (CF.debug) {
-							CF.log("Trying to get playing info from " + description());
-							CF.log("Error = " + error);
-						}
-					} else {
-						CF.log("Received playing info");
-						//CF.logObject(result);
-						
-						//package up data for return
-						var status = {};
-						status["artist"] = result[0][0]["cana"];
-						status["song"] = result[0][0]["cann"];
-						status["album"] = result[0][0]["canl"];
-						
-						if(result[0][0]["caps"].charCodeAt(0) == 3) {
-							status["playing"] = 0;
-						}else if(result[0][0]["caps"].charCodeAt(0) == 4) {
-							status["playing"] = 1;
-						}
-						
-						self.revision = ((result[0][0]["cmsr"].charCodeAt(0) << 24) | (result[0][0]["cmsr"].charCodeAt(1) << 16) | (result[0][0]["cmsr"].charCodeAt(2) << 8) | (result[0][0]["cmsr"].charCodeAt(3)));
-						self.currentStatus = status;
-						
-						//get artwork
-						var url = "http://" + getAddress() + ":3689/" + "ctrl-int/1/nowplayingartwork?mw=320&mh=320&session-id=" + self.sessionID;
-						var artJoin = "s" + (parseInt(joinStart)+1);
-						//headers for the image
-						CF.setToken(artJoin, "HTTP:Client-DAAP-Version", 3.10);
-						CF.setToken(artJoin, "HTTP:Viewer-Only-Client", 1);
-		
-						//gets speakers
-						getSpeakers();
-						
-						//info to data
-						CF.setJoins([
-							{ join:"s"+joinStart, value:self.currentStatus["artist"] + " - " + self.currentStatus["song"]},
-							{ join:"d"+joinStart, value:self.currentStatus["playing"]},
-							{ join:artJoin, value:url}
-						]);	
-						self.status(joinStart);
-						
-					}
-					
-				});
+			if (error !== null) {
+				if (CF.debug) {
+					CF.log("Trying to get playing info from " + description());
+					CF.log("Error = " + error);
+				}
+			} else {
+				if (CF.debug) {
+					CF.log("Received playing info");
+					//CF.logObject(result);
+				}
+
+				//package up data for return
+				var status = {};
+				status["artist"] = result[0][0]["cana"];
+				status["song"] = result[0][0]["cann"];
+				status["album"] = result[0][0]["canl"];
 				
+				if (result[0][0]["caps"].charCodeAt(0) == 3) {
+					status["playing"] = 0;
+				} else if(result[0][0]["caps"].charCodeAt(0) == 4) {
+					status["playing"] = 1;
+				}
+
+				self.revision = ((result[0][0]["cmsr"].charCodeAt(0) << 24) | (result[0][0]["cmsr"].charCodeAt(1) << 16) | (result[0][0]["cmsr"].charCodeAt(2) << 8) | (result[0][0]["cmsr"].charCodeAt(3)));
+				self.currentStatus = status;
 				
+				//get artwork
+				var url = "http://" + getAddress() + ":3689/" + "ctrl-int/1/nowplayingartwork?mw=320&mh=320&session-id=" + self.sessionID;
+				var artJoin = "s" + (parseInt(joinStart)+1);
+				//headers for the image
+				CF.setToken(artJoin, "HTTP:Client-DAAP-Version", 3.10);
+				CF.setToken(artJoin, "HTTP:Viewer-Only-Client", 1);
+
+				//gets speakers
+				getSpeakers();
 				
-		
+				//info to data
+				CF.setJoins([
+					{ join:"s"+joinStart, value:self.currentStatus["artist"] + " - " + self.currentStatus["song"]},
+					{ join:"d"+joinStart, value:self.currentStatus["playing"]},
+					{ join:artJoin, value:url}
+				]);	
+				self.status(joinStart);
+				
+			}
+			
+		});
 	}
 	
-	self.action = function(cmd){
+	self.action = function(cmd) {
 		var sessionParam = "session-id=" + self.sessionID;
 	
-	
-		switch(cmd){
-		
+		switch(cmd) {
 			case "playPause":
 				sendDAAPRequest("ctrl-int/1/playpause", [sessionParam], function(result,error) {
-					if (error !== null) {
-						if (CF.debug) {
+					if (CF.debug) {
+						if (error !== null) {
 							CF.log("Trying to pause/play from " + description());
 							CF.log("Error = " + error);
+						} else {
+							CF.log("paused played" + description());
+							CF.logObject(result);
 						}
-					} else {
-						CF.log("paused played" + description());
-						CF.logObject(result);
 					}
-			
 				});
 				break;
 				
 			case "next":
 				sendDAAPRequest("ctrl-int/1/nextitem", [sessionParam], function(result,error) {
-					if (error !== null) {
-						if (CF.debug) {
+					if (CF.debug) {
+						if (error != null) {
 							CF.log("Trying to nextitem from " + description());
 							CF.log("Error = " + error);
+						} else {
+							CF.log("nextitem " + description());
+							CF.logObject(result);
 						}
-					} else {
-						CF.log("nextitem " + description());
-						CF.logObject(result);
 					}
-			
 				});
 				break;
 				
 			case "prev":
 				sendDAAPRequest("ctrl-int/1/previtem", [sessionParam], function(result,error) {
-					if (error !== null) {
-						if (CF.debug) {
+					if (CF.debug) {
+						if (error !== null) {
 							CF.log("Trying to previtem from " + description());
 							CF.log("Error = " + error);
+						} else {
+							CF.log("previtem " + description());
+							CF.logObject(result);
 						}
-					} else {
-						CF.log("previtem " + description());
-						CF.logObject(result);
 					}
-			
 				});
 				break;
 				
 			default:
 				CF.log("Incorrect Command");
+				break;
 		}
 	};
 	
@@ -613,8 +571,8 @@ var iTunes = {
 					
 					// Send the response to iTunes
 					var response = iTunes.encodeDAAP(reply);
-					CF.send(iTunes.pairingSystem, "HTTP/1.1 200 OK\r\nContent-Length: "+response.length.toString()+"\r\n\r\n" + response);
-					
+					CF.send(iTunes.pairingSystem, "HTTP/1.1 200 OK\r\nContent-Length: "+ response.length + "\r\n\r\n" + response);
+
 					// Remember the paired service in our global token
 					iTunes.pairedServices.push(matches[2]);
 					CF.setToken(CF.GlobalTokensJoin, "iTunesPairedServices", iTunes.pairedServices.join("|"));
