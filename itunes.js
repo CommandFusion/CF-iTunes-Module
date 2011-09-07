@@ -601,11 +601,11 @@ var iTunes = {
 					// Prepare the pairing valid response. Our pairing GUID must be stuffed as a binary string
 					var binaryGUID = "";
 					for (var i=0; i < 8; i++) {
-						binaryGUID += String.fromCharCode(parseInt(iTunes.pairingGUID.substr(2*i, 2), 16));
+						binaryGUID += String.fromCharCode(parseInt(iTunes.pairingGUID.substr(2*i, 2), 16) & 0xff);
 					}
 					var reply = {
 						"cmpa": {
-							"cmnm": this.pairingName + " (" + CF.device.name + ")",
+							"cmnm": iTunes.pairingName + " (" + CF.device.name + ")",
 							"cmty": CF.device.model,
 							"cmpg": binaryGUID
 						}
