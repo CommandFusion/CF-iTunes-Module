@@ -44,7 +44,7 @@
         <inactive s="0">start</inactive>
         <active s="0">start</active>
       </btn>
-      <btn j="0" x="126" y="310" w="114" h="60" t="btn_sqr_sml" flip="None" sim="0" l="0" s="1" js="stopBrowingForITunes();">
+      <btn j="0" x="126" y="310" w="114" h="60" t="btn_sqr_sml" flip="None" sim="0" l="0" s="1" js="stopBrowsingForITunes();">
         <inactive s="0">stop</inactive>
         <active s="0">stop</active>
       </btn>
