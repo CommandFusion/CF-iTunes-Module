@@ -63,6 +63,11 @@ function selectInstance(name) {
 	}
 }
 
+function selectDatabase(id) {
+	gui.server.selectDatabase(id);
+
+}
+
 function setVolume(volume) {
 
 	gui.server.setVolume(volume);

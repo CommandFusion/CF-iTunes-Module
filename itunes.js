@@ -25,7 +25,7 @@ NOTE: if you don't follow exactly the instructions above, this module will not w
 =========================================================================
 */
 var iTunesGlobals = {
-	daapContainerTypes: "msrv mccr mdcl mlog mupd mlcl mlit apso aply cmst casp cmgt"
+	daapContainerTypes: "msrv mccr mdcl mlog mupd mlcl mlit apso aply cmst casp cmgt avdb"
 };
 
 /* ---------------------------------------------------------------------
@@ -81,7 +81,7 @@ var iTunesInstance = function(instance) {
 		}
 		return "<iTunesInstance " + name + " @ " + getAddress() + ">";
 	}
-
+	
 	function decodeDAAP(str) {
 		var localObj=[];
 		
@@ -89,36 +89,29 @@ var iTunesInstance = function(instance) {
 			return null;
 		}
 		obj = [];
-		
 		var tempobj = {};
-		var prop = str.substr(0, 4);
-		var propLen = (str.charCodeAt(4) << 24) | (str.charCodeAt(5) << 16) | (str.charCodeAt(6) << 8) | str.charCodeAt(7);
-		var data = str.substr(8, propLen);
-		var rem = str.substr(8+propLen);
-	
-		if (iTunesGlobals.daapContainerTypes.indexOf(prop) !== -1) {
-			localObj.push(decodeDAAP(data));
-			return localObj;
-		}
-
-		tempobj[prop] = data;
-		while (rem.length >= 8) {
-			var temprem = rem;
-			prop = rem.substr(0,4);
-			propLen = (rem.charCodeAt(4) << 24) | (rem.charCodeAt(5) << 16) | (rem.charCodeAt(6) << 8) | rem.charCodeAt(7);
-			data = rem.substr(8, propLen);
-			rem = rem.substr(8+propLen);
+		var prop, propLen, data, rem;
 			
+		do{
+			
+			prop = str.substr(0, 4);
+			propLen = (str.charCodeAt(4) << 24) | (str.charCodeAt(5) << 16) | (str.charCodeAt(6) << 8) | str.charCodeAt(7);
+			data = str.substr(8, propLen);
+			rem =  str.substr(8+propLen);
 			if (iTunesGlobals.daapContainerTypes.indexOf(prop) !== -1) {
 				localObj.push(decodeDAAP(data));
-			} else {
+			}else {
 				tempobj[prop] = data;
 			}
-		}
-		localObj.push(tempobj);
+			str = rem;
+		}while(str.length >= 8);
 		
+		localObj.push(tempobj);
 		return localObj;
 	}
+		
+
+	
 
 	function sendDAAPRequest(command, params, callback) {
 		// Send a request to iTunes, wait for result, decode DAAP object and pass it to callback
@@ -190,6 +183,8 @@ var iTunesInstance = function(instance) {
 					CF.log("Session ID = " + intSession);
 				}
 
+				
+				
 				// starts polling status
 				self.status(gui.joinStart);
 			}
@@ -286,11 +281,40 @@ var iTunesInstance = function(instance) {
 		
 		//Login into server
 		itunesLogin();
+		
+		//get first db
+		self.selectDatabase();
 	};
+	
+	self.selectDatabase = function(id){
+		
+		var sessionParam = "session-id=" + self.sessionID;
+		var request = "";
+		var meta = "dmap.itemname,dmap.itemcount,dmap.itemid,dmap.persistentid,daap.baseplaylist,com.apple.itunes.special-playlist,com.apple.itunes.smart-playlist,com.apple.itunes.saved-genius,dmap.parentcontainer";
+		
+		if(id==null){
+			request = "databases"
+		}else{
+			request = "databases/" + id + "/containers";
+		}
+	
+		sendDAAPRequest(request, [meta, sessionParam], function(result, error) {
+			if (error !== null) {
+				if (CF.debug) {
+					CF.log("Trying to database from " + description());
+					CF.log("Error = " + error);
+				}
+			} else {
+				CF.log("Got Database");
+				CF.logObject(result);
+			}
+		});
+	
+	}
+	
 	
 	self.setVolume = function(volume) {
 		var sessionParam = "session-id=" + self.sessionID;
-		
 		
 		
 		//ctrl-int/1/setproperty?dmcp.volume=100.000000&session-id=xxxxxx

@@ -30,6 +30,7 @@
     <theme type="gauge" name=".Slider[state='1']"><![CDATA[ background-image: url(gauge-02-a.png);]]></theme>
     <theme type="list" name=".list_FF8040"><![CDATA[background-color: #FF8040;]]></theme>
     <theme type="list" name=".list_FF0000"><![CDATA[background-color: #FF0000;]]></theme>
+    <theme type="list" name=".list_FF0080"><![CDATA[background-color: #FF0080;]]></theme>
   </themes>
   <tokens>
     <token name="iTunesPairedServices" value="" persist="1" />
@@ -59,7 +60,7 @@
           <img x="23" y="12" w="32" h="32">transports_sml_60_wht.png</img>
         </active>
       </btn>
-      <txt j="10" x="433" y="217" w="410" h="100" t="Title_C" wrap="False" l="0">Artist - Song</txt>
+      <txt j="10" x="341" y="186" w="410" h="100" t="Title_C" wrap="False" l="0">Artist - Song</txt>
       <btn j="0" x="666" y="108" w="75" h="66" t="btn_sqr_sml" flip="None" sim="1" l="0" s="1" js="itunesAction(&quot;next&quot;);">
         <inactive s="0">
           <img x="23" y="12" w="32" h="32">transports_sml_05_wht.png</img>
@@ -76,9 +77,14 @@
           <img x="23" y="12" w="32" h="32">transports_sml_04_wht.png</img>
         </active>
       </btn>
-      <img x="477" y="317" w="320" h="320" j="11" clickthrough="0" refresh="0" l="0" noCache="1" downloadIndicator="0" clearOnURLChange="0" />
+      <img x="766" y="44" w="237" h="237" j="11" clickthrough="0" refresh="0" l="0" noCache="1" downloadIndicator="0" clearOnURLChange="0" />
       <list j="10" x="13" y="450" w="300" h="209" t="list_FF0000" headerSub="" titleSub="" contentSub="iTunes_Speakers" footerSub="" orientation="v" l="0" swipedelete="0" />
       <slider j="10" d="0" x="505" y="25" w="104" h="13" min="0" max="100" decimals="0" pressCmd="Volume" releaseCmd="Volume" unit="decimal" t="Slider" sim="1" l="0" />
+      <list j="11" x="476" y="453" w="300" h="209" t="list_FF0080" headerSub="" titleSub="" contentSub="iTunes_Database" footerSub="" orientation="v" l="0" swipedelete="0" />
+      <btn j="0" x="502" y="356" w="114" h="60" t="btn_sqr_sml" flip="None" sim="0" l="0" s="1" js="selectDatabase();">
+        <inactive s="0">DB</inactive>
+        <active s="0">DB</active>
+      </btn>
     </landscape>
   </page>
   <subpage name="iTunes_Instance" w="300" h="40">
@@ -91,6 +97,15 @@
     </btn>
   </subpage>
   <subpage name="iTunes_Speakers" w="300" h="40">
+    <txt j="1" x="2" y="3" w="295" h="32" t="List_Item" wrap="False" l="0">iTunes Server</txt>
+    <btn j="2" x="2" y="2" w="299" h="36" t="" flip="None" sim="0" l="0" s="1" cmd="SelectSpeakers">
+      <inactive s="0">
+      </inactive>
+      <active s="0">
+      </active>
+    </btn>
+  </subpage>
+  <subpage name="iTunes_Database" w="300" h="40">
     <txt j="1" x="2" y="3" w="295" h="32" t="List_Item" wrap="False" l="0">iTunes Server</txt>
     <btn j="2" x="2" y="2" w="299" h="36" t="" flip="None" sim="0" l="0" s="1" cmd="SelectSpeakers">
       <inactive s="0">
