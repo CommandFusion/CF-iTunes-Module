@@ -14,6 +14,7 @@
     <system name="iTunesPairingServer" ip="0.0.0.0" origin="8090" port="0" protocol="tcp" alwayson="0" accept="1" ssl="0" maxconnections="0" heartbeatRx="" heartbeatTx="" heartbeatMode="-1" eom="" connectionStatus="0" disconnectionStatus="0">
       <cmd name="SelectInstance" js="selectInstance(data);" jsSendsCommand="True">[name]</cmd>
       <cmd name="SelectSpeakers" js="selectSpeakers(data);" jsSendsCommand="True">[id]</cmd>
+      <cmd name="Volume" js="setVolume(data);" jsSendsCommand="True">[sliderval]</cmd>
       <fb name="Pairing request" regex="GET /pair\?pairingcode=[0-9A-F]+&amp;servicename=[0-9A-F]+ " />
       <fb name="All traffic" regex=".*" />
     </system>
@@ -25,6 +26,8 @@
     <theme type="input" name=".input_blank"><![CDATA[ border-width: 0px; color: White; font-size: 12px; font-family: 'Arial'; text-align: left; vertical-align: middle; font-weight: bold; font-style: none; text-decoration: none; display: table-cell;]]></theme>
     <theme type="text" name=".Title_C"><![CDATA[ text-shadow: rgba(0,0,0,1) 1px -1px 1px; color: White; font-size: 24px; font-family: 'Arial'; text-align: center; vertical-align: middle; font-weight: bold; font-style: none; text-decoration: none; display: table-cell;]]></theme>
     <theme type="text" name=".List_Item"><![CDATA[ color: White; font-size: 14px; font-family: 'Arial'; text-align: left; vertical-align: middle; font-weight: normal; font-style: none; text-decoration: none; display: table-cell;]]></theme>
+    <theme type="gauge" name=".Slider[state='0']"><![CDATA[ background-image: url(gauge-02-i.png);]]></theme>
+    <theme type="gauge" name=".Slider[state='1']"><![CDATA[ background-image: url(gauge-02-a.png);]]></theme>
     <theme type="list" name=".list_FF8040"><![CDATA[background-color: #FF8040;]]></theme>
     <theme type="list" name=".list_FF0000"><![CDATA[background-color: #FF0000;]]></theme>
   </themes>
@@ -39,12 +42,12 @@
     <portrait />
     <landscape t="landscape">
       <txt j="0" x="5" y="24" w="188" h="28" t="Title_C" wrap="False" l="0">iTunes Servers</txt>
-      <list j="1" x="7" y="62" w="300" h="209" t="list_FF8040" headerSub="" titleSub="" contentSub="iTunes_Instance" footerSub="" orientation="v" l="0" swipedelete="0" />
+      <list j="1" x="11" y="64" w="300" h="209" t="list_FF8040" headerSub="" titleSub="" contentSub="iTunes_Instance" footerSub="" orientation="v" l="0" swipedelete="0" />
       <btn j="0" x="12" y="310" w="114" h="60" t="btn_sqr_sml" flip="None" sim="0" l="0" s="1" js="startBrowsingForITunes();">
         <inactive s="0">start</inactive>
         <active s="0">start</active>
       </btn>
-      <btn j="0" x="126" y="310" w="114" h="60" t="btn_sqr_sml" flip="None" sim="0" l="0" s="1" js="stopBrowsingForITunes();">
+      <btn j="0" x="126" y="310" w="114" h="60" t="btn_sqr_sml" flip="None" sim="0" l="0" s="1" js="stopBrowingForITunes();">
         <inactive s="0">stop</inactive>
         <active s="0">stop</active>
       </btn>
@@ -56,7 +59,7 @@
           <img x="23" y="12" w="32" h="32">transports_sml_60_wht.png</img>
         </active>
       </btn>
-      <txt j="10" x="511" y="217" w="218" h="100" t="Title_C" wrap="False" l="0">Artist - Song</txt>
+      <txt j="10" x="433" y="217" w="410" h="100" t="Title_C" wrap="False" l="0">Artist - Song</txt>
       <btn j="0" x="666" y="108" w="75" h="66" t="btn_sqr_sml" flip="None" sim="1" l="0" s="1" js="itunesAction(&quot;next&quot;);">
         <inactive s="0">
           <img x="23" y="12" w="32" h="32">transports_sml_05_wht.png</img>
@@ -75,6 +78,7 @@
       </btn>
       <img x="477" y="317" w="320" h="320" j="11" clickthrough="0" refresh="0" l="0" noCache="1" downloadIndicator="0" clearOnURLChange="0" />
       <list j="10" x="13" y="450" w="300" h="209" t="list_FF0000" headerSub="" titleSub="" contentSub="iTunes_Speakers" footerSub="" orientation="v" l="0" swipedelete="0" />
+      <slider j="10" d="0" x="505" y="25" w="104" h="13" min="0" max="100" decimals="0" pressCmd="Volume" releaseCmd="Volume" unit="decimal" t="Slider" sim="1" l="0" />
     </landscape>
   </page>
   <subpage name="iTunes_Instance" w="300" h="40">

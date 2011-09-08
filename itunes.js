@@ -25,7 +25,7 @@ NOTE: if you don't follow exactly the instructions above, this module will not w
 =========================================================================
 */
 var iTunesGlobals = {
-	daapContainerTypes: "msrv mccr mdcl mlog mupd mlcl mlit apso aply cmst casp"
+	daapContainerTypes: "msrv mccr mdcl mlog mupd mlcl mlit apso aply cmst casp cmgt"
 };
 
 /* ---------------------------------------------------------------------
@@ -186,7 +186,7 @@ var iTunesInstance = function(instance) {
 
 				if (CF.debug) {
 					CF.log("Login session info:");
-					CF.logObject(result);
+					//CF.logObject(result);
 					CF.log("Session ID = " + intSession);
 				}
 
@@ -236,6 +236,33 @@ var iTunesInstance = function(instance) {
 		});
 	}
 	
+	//Gets the speaker Volume
+	function getVolume()  {
+	
+		//ctrl-int/1/getproperty?properties=dmcp.volume&session-id=xxxxxxxxx
+		var sessionParam = "session-id=" + self.sessionID;
+		
+		sendDAAPRequest("ctrl-int/1/getproperty", ["properties=dmcp.volume", sessionParam], function(result, error) {
+			if (error !== null) {
+				if (CF.debug) {
+					CF.log("Trying to get Volume info from " + description());
+					CF.log("Error = " + error);
+				}
+			} else {
+				CF.log("Received Volume info:");
+				//CF.logObject(result);
+				var volume = result[0][0]["cmvo"];
+				volume = ((volume.charCodeAt(0) << 24) | (volume.charCodeAt(1) << 16) | (volume.charCodeAt(2) << 8) | volume.charCodeAt(3));
+				//CF.log(volume);
+				
+				var sliderVal = (parseInt(volume)/100)*65535;
+				
+				CF.setJoin("a"+gui.joinStart, sliderVal);
+				
+			}
+		});
+	}
+	
 
 	
 	/* -------------------------------
@@ -252,7 +279,7 @@ var iTunesInstance = function(instance) {
 				}
 			} else {
 				CF.log("Received server-info:");
-				CF.logObject(result);
+				//CF.logObject(result);
 			}
 		});
 		
@@ -261,6 +288,25 @@ var iTunesInstance = function(instance) {
 		itunesLogin();
 	};
 	
+	self.setVolume = function(volume) {
+		var sessionParam = "session-id=" + self.sessionID;
+		
+		
+		
+		//ctrl-int/1/setproperty?dmcp.volume=100.000000&session-id=xxxxxx
+		sendDAAPRequest("ctrl-int/1/setproperty", ["dmcp.volume="+volume, sessionParam], function(result, error) {
+			if (error !== null) {
+				if (CF.debug) {
+					CF.log("Trying to set info from " + description());
+					CF.log("Error = " + error);
+				}
+			} else {
+				CF.log("Set Volume");
+				CF.logObject(result);
+			}
+		});
+	
+	}
 
 	self.setSpeakers = function(id) {
 		var sessionParam = "session-id=" + self.sessionID;
@@ -279,7 +325,7 @@ var iTunesInstance = function(instance) {
 						}
 					} else {
 						CF.log("set speakers" + description());
-						CF.logObject(result);
+						//CF.logObject(result);
 					}
 			
 				});
@@ -327,6 +373,9 @@ var iTunesInstance = function(instance) {
 				//gets speakers
 				getSpeakers();
 				
+				//get volume
+				getVolume();
+				
 				//info to data
 				CF.setJoins([
 					{ join:"s"+joinStart, value:self.currentStatus["artist"] + " - " + self.currentStatus["song"]},
@@ -352,7 +401,7 @@ var iTunesInstance = function(instance) {
 							CF.log("Error = " + error);
 						} else {
 							CF.log("paused played" + description());
-							CF.logObject(result);
+							//CF.logObject(result);
 						}
 					}
 				});
@@ -366,7 +415,7 @@ var iTunesInstance = function(instance) {
 							CF.log("Error = " + error);
 						} else {
 							CF.log("nextitem " + description());
-							CF.logObject(result);
+							//CF.logObject(result);
 						}
 					}
 				});
@@ -380,7 +429,7 @@ var iTunesInstance = function(instance) {
 							CF.log("Error = " + error);
 						} else {
 							CF.log("previtem " + description());
-							CF.logObject(result);
+							//CF.logObject(result);
 						}
 					}
 				});

@@ -1,0 +1,7 @@
+TODO
+
++Track Seeking
++libary searching
++repeat
++shuffle
++gui file (using non copyrighted images)

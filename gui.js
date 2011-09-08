@@ -63,6 +63,12 @@ function selectInstance(name) {
 	}
 }
 
+function setVolume(volume) {
+
+	gui.server.setVolume(volume);
+
+}
+
 function selectSpeakers(id) {
 	// an iTunes instance was selected
 	gui.server.setSpeakers(id);
