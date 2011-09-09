@@ -64,7 +64,22 @@ function selectInstance(name) {
 }
 
 function selectDatabase(id) {
-	gui.server.selectDatabase(id);
+	
+	if(id == null){
+		gui.server.selectDatabase();
+		return null;
+	}
+	
+	var idSplit = id.split(":");
+	if(idSplit.length == 2){
+		if (idSplit[1] == "[prev]") {
+			gui.server.selectDatabase(idSplit[0]);
+		}else {
+			gui.server.selectDatabase(idSplit[0], idSplit[1]);
+		}
+	}else {
+		gui.server.selectDatabase(idSplit[0]);
+	}
 
 }
 

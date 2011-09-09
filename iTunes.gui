@@ -15,6 +15,7 @@
       <cmd name="SelectInstance" js="selectInstance(data);" jsSendsCommand="True">[name]</cmd>
       <cmd name="SelectSpeakers" js="selectSpeakers(data);" jsSendsCommand="True">[id]</cmd>
       <cmd name="Volume" js="setVolume(data);" jsSendsCommand="True">[sliderval]</cmd>
+      <cmd name="SelectDatabase" js="selectDatabase(data);" jsSendsCommand="True">[id]:[prev]</cmd>
       <fb name="Pairing request" regex="GET /pair\?pairingcode=[0-9A-F]+&amp;servicename=[0-9A-F]+ " />
       <fb name="All traffic" regex=".*" />
     </system>
@@ -107,7 +108,7 @@
   </subpage>
   <subpage name="iTunes_Database" w="300" h="40">
     <txt j="1" x="2" y="3" w="295" h="32" t="List_Item" wrap="False" l="0">iTunes Server</txt>
-    <btn j="2" x="2" y="2" w="299" h="36" t="" flip="None" sim="0" l="0" s="1" cmd="SelectSpeakers">
+    <btn j="2" x="2" y="2" w="299" h="36" t="" flip="None" sim="0" l="0" s="1" cmd="SelectDatabase">
       <inactive s="0">
       </inactive>
       <active s="0">
