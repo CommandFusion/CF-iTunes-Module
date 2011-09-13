@@ -66,19 +66,19 @@ function selectInstance(name) {
 function selectDatabase(id) {
 	
 	if(id == null){
-		gui.server.selectDatabase();
+		gui.server.selectDatabase("", "0");
 		return null;
 	}
 	
 	var idSplit = id.split(":");
 	if(idSplit.length == 2){
-		if (idSplit[1] == "[prev]") {
-			gui.server.selectDatabase(idSplit[0]);
+		if (idSplit[1] == "[cmd]") {
+			gui.server.selectDatabase(idSplit[0], "0");
 		}else {
 			gui.server.selectDatabase(idSplit[0], idSplit[1]);
 		}
 	}else {
-		gui.server.selectDatabase(idSplit[0]);
+		gui.server.selectDatabase(idSplit[0], "0");
 	}
 
 }

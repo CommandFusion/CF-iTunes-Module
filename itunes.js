@@ -25,7 +25,7 @@ NOTE: if you don't follow exactly the instructions above, this module will not w
 =========================================================================
 */
 var iTunesGlobals = {
-	daapContainerTypes: "msrv mccr mdcl mlog mupd mlcl mlit apso aply cmst casp cmgt avdb agar"
+	daapContainerTypes: "msrv mccr mdcl mlog mupd mlcl mlit apso aply cmst casp cmgt avdb agar agal"
 };
 
 /* ---------------------------------------------------------------------
@@ -49,7 +49,8 @@ var iTunesInstance = function(instance) {
 		service: instance,					// the actual iTunes service description
 		sessionID: "",
 		songStatus: [],
-		revision: 1
+		revision: 1,
+		dbid: ""
 	};
 
 	//
@@ -286,25 +287,19 @@ var iTunesInstance = function(instance) {
 		self.selectDatabase();
 	};
 	
-	self.selectDatabase = function(id, previd){
+	self.selectDatabase = function(id, command){
 		var join = parseInt(gui.joinStart) + 1
 		
 		CF.listRemove("l"+join.toString());
 		
 		var sessionParam = "session-id=" + self.sessionID;
 		var request = "";
-		var meta = "meta=dmap.itemname,dmap.itemcount,dmap.itemid,dmap.persistentid,daap.baseplaylist,com.apple.itunes.special-playlist,com.apple.itunes.smart-playlist,com.apple.itunes.saved-genius,dmap.parentcontainer";
+		var meta ="";
 		
-		if(id==null){
+		if(command=="0"){
 			request = "databases"
-		}else if(previd==null){
-			meta = "meta=dmap.itemname,dmap.itemid,dmap.persistentid,daap.songartist,daap.groupalbumcount&type=music&group-type=artists&sort=album&include-sort-headers=1&query=(('com.apple.itunes.mediakind:1','com.apple.itunes.mediakind:32')+'daap.songartist!:')"
-			request = "databases/" + id + "/groups";
-		}else{
-			request = "databases/" + previd + "/containers/" + id + "/items";
-		}
-	
-		sendDAAPRequest(request, [meta, sessionParam], function(result, error) {
+			
+			sendDAAPRequest(request, [meta, sessionParam], function(result, error) {
 			if (error !== null) {
 				if (CF.debug) {
 					CF.log("Trying to database from " + description());
@@ -319,16 +314,126 @@ var iTunesInstance = function(instance) {
 					var newid = result[0][0][i][0]["miid"];
 					newid = ((newid.charCodeAt(0) << 24) | (newid.charCodeAt(1) << 16) | (newid.charCodeAt(2) << 8) | newid.charCodeAt(3));
 				
-					CF.listAdd("l"+join.toString() , [{
-						// add one item
-						s1: result[0][0][i][0]["minm"],
-						d2: {
-							tokens: {"[id]": newid, "[prev]": id  }
-						}
-					}]);
+					
+						CF.listAdd("l"+join.toString() , [{
+							// add one item
+							s1: result[0][0][i][0]["minm"],
+							d2: {
+								tokens: {"[id]": newid, "[cmd]": "1"}
+							}
+						}]);
+					
+				
+					
 				}
 			}
 		});
+			
+		} else if(command == "1"){
+			self.dbid = id;
+			request = "databases/" + self.dbid + "/groups"
+			meta = "meta=dmap.itemname,dmap.itemid,dmap.persistentid,daap.songartist,daap.groupalbumcount&type=music&group-type=artists&sort=album&include-sort-headers=1&query=(('com.apple.itunes.mediakind:1','com.apple.itunes.mediakind:32')+'daap.songartist!:')"
+			sendDAAPRequest(request, [meta, sessionParam], function(result, error) {
+				if (error !== null) {
+					if (CF.debug) {
+						CF.log("Trying to database from " + description());
+						CF.log("Error = " + error);
+					}
+				} else {
+					CF.log("Got Database");
+					//CF.logObject(result);
+				
+					for(var i = 0; i < result[0][0].length - 1; i++) {
+				
+						var newid = result[0][0][i][0]["miid"];
+						newid = ((newid.charCodeAt(0) << 24) | (newid.charCodeAt(1) << 16) | (newid.charCodeAt(2) << 8) | newid.charCodeAt(3));
+				
+						if(newid != null) {
+							CF.listAdd("l"+join.toString() , [{
+								// add one item
+								s1: result[0][0][i][0]["minm"],
+								d2: {
+									tokens: {"[id]": result[0][0][i][0]["minm"], "[cmd]": "2"}
+								}
+							}]);
+						}
+				
+					
+					}
+				}
+			});
+			
+			
+		} else if(command == "2") {
+			request = "databases/" + self.dbid + "/groups"
+			meta = "meta=dmap.itemname,dmap.itemid,dmap.persistentid,daap.songalbumid,daap.songartist,daap.songdatereleased,dmap.itemcount,daap.songtime,dmap.persistentid&type=music&group-type=albums&sort=album&include-sort-headers=1&query=(('daap.songartist:" + id + "','daap.songalbumartist:"+ id +"')+('com.apple.itunes.mediakind:1','com.apple.itunes.mediakind:32')+'daap.songalbum!:')"
+			sendDAAPRequest(request, [meta, sessionParam], function(result, error) {
+				if (error !== null) {
+					if (CF.debug) {
+						CF.log("Trying to database from " + description());
+						CF.log("Error = " + error);
+					}
+				} else {
+					CF.log("Got Database");
+					//CF.logObject(result);
+				
+					for(var i = 0; i < result[0][0].length - 1; i++) {
+				
+						var newid = result[0][0][i][0]["miid"];
+						newid = ((newid.charCodeAt(0) << 24) | (newid.charCodeAt(1) << 16) | (newid.charCodeAt(2) << 8) | newid.charCodeAt(3));
+				
+						if(newid != null) {
+							CF.listAdd("l"+join.toString() , [{
+								// add one item
+								s1: result[0][0][i][0]["minm"],
+								d2: {
+									tokens: {"[id]": newid, "[cmd]": "3"}
+								}
+							}]);
+						}
+				
+					
+					}
+				}
+			});
+		
+		} else if(command=="3") {
+			
+			request = "databases/" + self.dbid + "/container/" + id + "/items";
+			meta = "meta=dmap.itemname,dmap.itemid,dmap.persistentid,daap.songartist,daap.songdatereleased,dmap.itemcount,daap.songtime,dmap.persistentid&type=music&group-type=albums&sort=album&include-sort-headers=1"
+			sendDAAPRequest(request, [meta, sessionParam], function(result, error) {
+				if (error !== null) {
+					if (CF.debug) {
+						CF.log("Trying to database from " + description());
+						CF.log("Error = " + error);
+					}
+				} else {
+					CF.log("Got Database");
+					//CF.logObject(result);
+				
+					for(var i = 0; i < result[0][0].length - 1; i++) {
+				
+						var newid = result[0][0][i][0]["miid"];
+						newid = ((newid.charCodeAt(0) << 24) | (newid.charCodeAt(1) << 16) | (newid.charCodeAt(2) << 8) | newid.charCodeAt(3));
+				
+						if(newid != null) {
+							CF.listAdd("l"+join.toString() , [{
+								// add one item
+								s1: result[0][0][i][0]["minm"],
+								d2: {
+									tokens: {"[id]": newid, "[cmd]": "4"}
+								}
+							}]);
+						}
+				
+					
+					}
+				}
+			});
+		
+		}
+	
+		
 	
 	}
 	
