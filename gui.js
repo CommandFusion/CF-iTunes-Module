@@ -77,8 +77,8 @@ function selectDatabase(id) {
 		}else {
 			gui.server.selectDatabase(idSplit[0], idSplit[1]);
 		}
-	}else {
-		gui.server.selectDatabase(idSplit[0], "0");
+	} else if (idSplit.length == 3) {
+			gui.server.selectDatabase(idSplit[0], idSplit[1], idSplit[2]);
 	}
 
 }

@@ -25,7 +25,7 @@ NOTE: if you don't follow exactly the instructions above, this module will not w
 =========================================================================
 */
 var iTunesGlobals = {
-	daapContainerTypes: "msrv mccr mdcl mlog mupd mlcl mlit apso aply cmst casp cmgt avdb agar agal"
+	daapContainerTypes: "msrv mccr mdcl mlog mupd mlcl mlit apso aply cmst casp cmgt avdb agar agal adbs"
 };
 
 /* ---------------------------------------------------------------------
@@ -287,7 +287,7 @@ var iTunesInstance = function(instance) {
 		self.selectDatabase();
 	};
 	
-	self.selectDatabase = function(id, command){
+	self.selectDatabase = function(id, command, place){
 		var join = parseInt(gui.joinStart) + 1
 		
 		CF.listRemove("l"+join.toString());
@@ -367,6 +367,7 @@ var iTunesInstance = function(instance) {
 		} else if(command == "2") {
 			request = "databases/" + self.dbid + "/groups"
 			meta = "meta=dmap.itemname,dmap.itemid,dmap.persistentid,daap.songalbumid,daap.songartist,daap.songdatereleased,dmap.itemcount,daap.songtime,dmap.persistentid&type=music&group-type=albums&sort=album&include-sort-headers=1&query=(('daap.songartist:" + id + "','daap.songalbumartist:"+ id +"')+('com.apple.itunes.mediakind:1','com.apple.itunes.mediakind:32')+'daap.songalbum!:')"
+			meta = encodeURI(meta);
 			sendDAAPRequest(request, [meta, sessionParam], function(result, error) {
 				if (error !== null) {
 					if (CF.debug) {
@@ -387,7 +388,7 @@ var iTunesInstance = function(instance) {
 								// add one item
 								s1: result[0][0][i][0]["minm"],
 								d2: {
-									tokens: {"[id]": newid, "[cmd]": "3"}
+									tokens: {"[id]": result[0][0][i][0]["minm"], "[cmd]": "3"}
 								}
 							}]);
 						}
@@ -399,9 +400,11 @@ var iTunesInstance = function(instance) {
 		
 		} else if(command=="3") {
 			
-			request = "databases/" + self.dbid + "/container/" + id + "/items";
+			request = "databases/" + self.dbid + "/items";
 			meta = "meta=dmap.itemname,dmap.itemid,dmap.persistentid,daap.songartist,daap.songdatereleased,dmap.itemcount,daap.songtime,dmap.persistentid&type=music&group-type=albums&sort=album&include-sort-headers=1"
-			sendDAAPRequest(request, [meta, sessionParam], function(result, error) {
+			var query = "query=(('daap.songalbum:" + id + "')+('com.apple.itunes.mediakind:1','com.apple.itunes.mediakind:32'))";
+			query = encodeURI(query);
+			sendDAAPRequest(request, [meta, query, sessionParam], function(result, error) {
 				if (error !== null) {
 					if (CF.debug) {
 						CF.log("Trying to database from " + description());
@@ -413,15 +416,23 @@ var iTunesInstance = function(instance) {
 				
 					for(var i = 0; i < result[0][0].length - 1; i++) {
 				
-						var newid = result[0][0][i][0]["miid"];
-						newid = ((newid.charCodeAt(0) << 24) | (newid.charCodeAt(1) << 16) | (newid.charCodeAt(2) << 8) | newid.charCodeAt(3));
-				
+						var newid = result[0][0][i][0]["mper"];
+						
+						var binaryid = "";
+						
+						for(var a = 0; i < newid.length; a++) {
+							binaryid = binaryid + newid.charCodeAt(a).toString(2);
+						}
+						CF.log(binaryid);
+						
+						newid = binaryid;
+						
 						if(newid != null) {
 							CF.listAdd("l"+join.toString() , [{
 								// add one item
 								s1: result[0][0][i][0]["minm"],
 								d2: {
-									tokens: {"[id]": newid, "[cmd]": "4"}
+									tokens: {"[id]": newid, "[cmd]": "4", "[place]": i+1}
 								}
 							}]);
 						}
@@ -431,10 +442,43 @@ var iTunesInstance = function(instance) {
 				}
 			});
 		
-		}
-	
+		} else if(command=="4"){
 		
+			//clear que
+			request = "ctrl-int/1/cue";
+			var cmd = "command=clear";
+			
+			sendDAAPRequest(request, [cmd, sessionParam], function(result, error) {
+				if (error !== null) {
+					if (CF.debug) {
+						CF.log("Trying to Play from " + description());
+						CF.log("Error = " + error);
+					}
+				} else {
+					CF.log("Got Music");
+					//CF.logObject(result);
+		
+		
+				}	
 	
+			});
+			
+			cmd = "command=play&query='daap.songalbumid:" + id + "'&index=" + place + "&sort=album";
+			sendDAAPRequest(request, [cmd, sessionParam], function(result, error) {
+				if (error !== null) {
+					if (CF.debug) {
+						CF.log("Trying to Play from " + description());
+						CF.log("Error = " + error);
+					}
+				} else {
+					CF.log("Got Music");
+					//CF.logObject(result);
+		
+		
+				}	
+	
+			});
+		}
 	}
 	
 	

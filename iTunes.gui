@@ -15,7 +15,7 @@
       <cmd name="SelectInstance" js="selectInstance(data);" jsSendsCommand="True">[name]</cmd>
       <cmd name="SelectSpeakers" js="selectSpeakers(data);" jsSendsCommand="True">[id]</cmd>
       <cmd name="Volume" js="setVolume(data);" jsSendsCommand="True">[sliderval]</cmd>
-      <cmd name="SelectDatabase" js="selectDatabase(data);" jsSendsCommand="True">[id]:[cmd]</cmd>
+      <cmd name="SelectDatabase" js="selectDatabase(data);" jsSendsCommand="True">[id]:[cmd]:[place]</cmd>
       <fb name="Pairing request" regex="GET /pair\?pairingcode=[0-9A-F]+&amp;servicename=[0-9A-F]+ " />
       <fb name="All traffic" regex=".*" />
     </system>
@@ -78,7 +78,7 @@
           <img x="23" y="12" w="32" h="32">transports_sml_04_wht.png</img>
         </active>
       </btn>
-      <img x="766" y="44" w="237" h="237" j="11" clickthrough="0" refresh="0" l="0" noCache="0" downloadIndicator="0" clearOnURLChange="0" />
+      <img x="766" y="44" w="237" h="237" j="11" clickthrough="0" refresh="0" l="0" noCache="1" downloadIndicator="0" clearOnURLChange="0" />
       <list j="10" x="13" y="450" w="300" h="209" t="list_FF0000" headerSub="" titleSub="" contentSub="iTunes_Speakers" footerSub="" orientation="v" l="0" swipedelete="0" />
       <slider j="10" d="0" x="505" y="25" w="104" h="13" min="0" max="100" decimals="0" pressCmd="Volume" releaseCmd="Volume" unit="decimal" t="Slider" sim="1" l="0" />
       <list j="11" x="476" y="453" w="300" h="209" t="list_FF0080" headerSub="" titleSub="" contentSub="iTunes_Database" footerSub="" orientation="v" l="0" swipedelete="0" />
