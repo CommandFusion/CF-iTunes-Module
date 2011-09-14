@@ -86,7 +86,7 @@ var iTunesInstance = function(instance) {
 	}
 	
 	function logObject(o) {
-		if (CF.debug || 1) {
+		if (CF.debug) {
 			CF.logObject(o);
 		}
 	}
