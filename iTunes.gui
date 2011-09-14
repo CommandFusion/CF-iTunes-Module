@@ -39,6 +39,7 @@
   <scripts>
     <script name="itunes.js" />
     <script name="gui.js" />
+    <script name="bigInt.js" />
   </scripts>
   <page name="Main" j="0" transition="None" subtype="None" time="0" ease="" start="1">
     <portrait />

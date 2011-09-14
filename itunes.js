@@ -24,6 +24,13 @@ To use this script, please complete the following steps:
 NOTE: if you don't follow exactly the instructions above, this module will not work!
 =========================================================================
 */
+String.prototype.lpad = function(padString, length) {
+	var str = this;
+    while (str.length < length)
+        str = padString + str;
+    return str;
+}
+
 var iTunesGlobals = {
 	daapContainerTypes: "msrv mccr mdcl mlog mupd mlcl mlit apso aply cmst casp cmgt avdb agar agal adbs"
 };
@@ -53,9 +60,11 @@ var iTunesInstance = function(instance) {
 		dbid: ""
 	};
 
+	
 	//
 	// Private functions
 	//
+	
 	function getAddress() {
 		// Get the actual address of the iTunes instance, depending on whether
 		// we are on IPv4 or IPv6 network.
@@ -382,7 +391,7 @@ var iTunesInstance = function(instance) {
 				
 						var newid = result[0][0][i][0]["miid"];
 						newid = ((newid.charCodeAt(0) << 24) | (newid.charCodeAt(1) << 16) | (newid.charCodeAt(2) << 8) | newid.charCodeAt(3));
-				
+						
 						if(newid != null) {
 							CF.listAdd("l"+join.toString() , [{
 								// add one item
@@ -401,7 +410,7 @@ var iTunesInstance = function(instance) {
 		} else if(command=="3") {
 			
 			request = "databases/" + self.dbid + "/items";
-			meta = "meta=dmap.itemname,dmap.itemid,dmap.persistentid,daap.songartist,daap.songdatereleased,dmap.itemcount,daap.songtime,dmap.persistentid&type=music&group-type=albums&sort=album&include-sort-headers=1"
+			meta = "meta=dmap.itemname,dmap.itemid,dmap.persistentid,daap.songartist,daap.songdatereleased,dmap.itemcount,daap.songtime,dmap.persistentid,daap.songalbumid&type=music&group-type=albums&sort=album&include-sort-headers=1"
 			var query = "query=(('daap.songalbum:" + id + "')+('com.apple.itunes.mediakind:1','com.apple.itunes.mediakind:32'))";
 			query = encodeURI(query);
 			sendDAAPRequest(request, [meta, query, sessionParam], function(result, error) {
@@ -415,21 +424,44 @@ var iTunesInstance = function(instance) {
 					//CF.logObject(result);
 				
 					for(var i = 0; i < result[0][0].length - 1; i++) {
-				
-						var newid = result[0][0][i][0]["mper"];
-						var albumid = 0;
+						newid = result[0][0][i][0]["asai"];
+						//var newid = result[0][0][i][0]["mper"];
+						var tempbin = "";
+						var albumid = [];
 						var binaryid = "";
+						var temppwr = "1";
+						var idtotal = "0";
 						
 						for(var a = 0; a < newid.length; a++) {
-							binaryid = binaryid + newid.charCodeAt(a).toString(2);
+							tempbin = newid.charCodeAt(a).toString(2);
+							if(a != 0){
+								tempbin = tempbin.lpad("0", 8);
+							}
+							binaryid = binaryid + tempbin;
 						}
-	                    //binaryid = "1010";
+
 						for(var a = 0; a < binaryid.length; a++) {
-							albumid += (parseInt(binaryid[a]) * Math.pow(2, ((binaryid.length-1)-a)));
-						
+							//albumid += (parseInt(binaryid[a]) * Math.pow(2, ((binaryid.length-1)-a)));
+							
+							if(a==binaryid.length-1) {
+								temppwr = "1";
+							} else{
+								for(var b = 0; b < ((binaryid.length-1)-a); b++) {
+									temppwr = bigint_mul("2",temppwr);
+								}
+							}
+							
+							albumid[a] = bigint_mul(binaryid[a],temppwr)
+							temppwr = "1";
 						}
 						
-						CF.log(albumid);
+						for(var c = 0; c < albumid.length; c++){
+							if(albumid[c] != "0") {
+								idtotal = bigint_plus(idtotal, albumid[c]);
+							}
+						}
+						
+						CF.log(idtotal);
 						
 						
 						if(newid != null) {
@@ -437,7 +469,7 @@ var iTunesInstance = function(instance) {
 								// add one item
 								s1: result[0][0][i][0]["minm"],
 								d2: {
-									tokens: {"[id]": albumid, "[cmd]": "4", "[place]": i+1}
+									tokens: {"[id]": idtotal + "z", "[cmd]": "4", "[place]": i}
 								}
 							}]);
 						}
