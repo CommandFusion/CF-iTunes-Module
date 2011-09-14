@@ -86,7 +86,7 @@ var iTunesInstance = function(instance) {
 	}
 	
 	function logObject(o) {
-		if (CF.debug || 1) {
+		if (CF.debug) {
 			CF.logObject(o);
 		}
 	}
@@ -99,14 +99,12 @@ var iTunesInstance = function(instance) {
 		if (CF.ipv4address.length > 0) {
 			for (i=0; i < len; i++) {
 				if (addrs[i].indexOf(":") == -1) {
-					log("getAddress() returns ", addrs[i]);
 					return addrs[i];
 				}
 			}
 		}
 		for (i=0; i < len; i++) {
 			if (addrs[i].charAt(0) == "[") {
-				log("getAddress() returns ", addrs[i]);
 				return addrs[i];
 			}
 		}
@@ -130,27 +128,23 @@ var iTunesInstance = function(instance) {
 		var tempobj = {};
 		var prop, propLen, data, rem;
 			
-		do{
-			
+		do {
 			prop = str.substr(0, 4);
 			propLen = (str.charCodeAt(4) << 24) | (str.charCodeAt(5) << 16) | (str.charCodeAt(6) << 8) | str.charCodeAt(7);
 			data = str.substr(8, propLen);
 			rem =  str.substr(8+propLen);
 			if (iTunesGlobals.daapContainerTypes.indexOf(prop) !== -1) {
 				localObj.push(decodeDAAP(data));
-			}else {
+			} else {
 				tempobj[prop] = data;
 			}
 			str = rem;
-		}while(str.length >= 8);
+		} while(str.length >= 8);
 		
 		localObj.push(tempobj);
 		return localObj;
 	}
 		
-
-	
-
 	function sendDAAPRequest(command, params, callback) {
 		// Send a request to iTunes, wait for result, decode DAAP object and pass it to callback
 		// Callback receives:
@@ -197,8 +191,6 @@ var iTunesInstance = function(instance) {
 					self.revision=1;
 					itunesLogin();
 				}
-				
-				
 			}
 		});
 	}
@@ -302,7 +294,7 @@ var iTunesInstance = function(instance) {
 		sendDAAPRequest("server-info", [], function(result, error) {
 			if (error !== null) {
 				log("Trying to get server info from ", description());
-				log("Error = " + error);
+				log("Error = ", error);
 			} else {
 				log("Received server-info:");
 				logObject(result);
@@ -547,7 +539,7 @@ var iTunesInstance = function(instance) {
 
 		sendDAAPRequest("ctrl-int/1/setspeakers", ["speaker-id="+id, sessionParam], function(result,error) {
 			if (error !== null) {
-				log("Trying to set speakers from " + description());
+				log("Trying to set speakers from ", description());
 				log("Error = ", error);
 			} else {
 				log("set speakers", description());
