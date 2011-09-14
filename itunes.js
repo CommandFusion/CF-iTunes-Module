@@ -417,22 +417,27 @@ var iTunesInstance = function(instance) {
 					for(var i = 0; i < result[0][0].length - 1; i++) {
 				
 						var newid = result[0][0][i][0]["mper"];
-						
+						var albumid = 0;
 						var binaryid = "";
 						
-						for(var a = 0; i < newid.length; a++) {
+						for(var a = 0; a < newid.length; a++) {
 							binaryid = binaryid + newid.charCodeAt(a).toString(2);
 						}
-						CF.log(binaryid);
+	                    //binaryid = "1010";
+						for(var a = 0; a < binaryid.length; a++) {
+							albumid += (parseInt(binaryid[a]) * Math.pow(2, ((binaryid.length-1)-a)));
 						
-						newid = binaryid;
+						}
+						
+						CF.log(albumid);
+						
 						
 						if(newid != null) {
 							CF.listAdd("l"+join.toString() , [{
 								// add one item
 								s1: result[0][0][i][0]["minm"],
 								d2: {
-									tokens: {"[id]": newid, "[cmd]": "4", "[place]": i+1}
+									tokens: {"[id]": albumid, "[cmd]": "4", "[place]": i+1}
 								}
 							}]);
 						}
