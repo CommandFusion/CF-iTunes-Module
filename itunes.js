@@ -309,7 +309,6 @@ var iTunesInstance = function(instance) {
 
 				// login into server, then get first DB
 				itunesLogin();
-				self.selectDatabase();
 			}
 		});
 	};
