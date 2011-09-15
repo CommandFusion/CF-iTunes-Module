@@ -38,6 +38,9 @@
     <theme type="list" name=".list_FF8040"><![CDATA[background-color: #FF8040;]]></theme>
     <theme type="list" name=".list_FF0000"><![CDATA[background-color: #FF0000;]]></theme>
     <theme type="list" name=".list_FF0080"><![CDATA[background-color: #FF0080;]]></theme>
+    <theme type="list" name=".list_FF0080"><![CDATA[background-color: #FF0080;]]></theme>
+    <theme type="list" name=".list_FF0080"><![CDATA[background-color: #FF0080;]]></theme>
+    <theme type="list" name=".list_FF0080"><![CDATA[background-color: #FF0080;]]></theme>
   </themes>
   <tokens>
     <token name="iTunesPairedServices" value="" persist="1" />
@@ -87,15 +90,18 @@
         </active>
       </btn>
       <img x="766" y="44" w="237" h="237" j="11" clickthrough="0" refresh="0" l="0" noCache="1" downloadIndicator="0" clearOnURLChange="0" />
-      <list j="10" x="13" y="450" w="300" h="209" t="list_FF0000" headerSub="" titleSub="" contentSub="iTunes_Speakers" footerSub="" orientation="v" l="0" swipedelete="0" />
+      <list j="10" x="3" y="382" w="267" h="148" t="list_FF0000" headerSub="" titleSub="" contentSub="iTunes_Speakers" footerSub="" orientation="v" l="0" swipedelete="0" />
       <slider j="10" d="0" x="505" y="25" w="104" h="13" min="0" max="100" decimals="0" pressCmd="Volume" dragCmd="Volume" releaseCmd="Volume" unit="decimal" t="Slider" sim="1" l="0" />
-      <list j="11" x="476" y="453" w="300" h="209" t="list_FF0080" headerSub="" titleSub="" contentSub="iTunes_Database" footerSub="" orientation="v" l="0" swipedelete="0" />
-      <btn j="0" x="807" y="455" w="114" h="60" t="btn_sqr_sml" flip="None" sim="0" l="0" s="1" js="selectDatabase();">
+      <list j="11" x="282" y="432" w="300" h="140" t="list_FF0080" headerSub="" titleSub="" contentSub="iTunes_Database" footerSub="" orientation="v" l="0" swipedelete="0" />
+      <btn j="0" x="837" y="323" w="114" h="60" t="btn_sqr_sml" flip="None" sim="0" l="0" s="1" js="selectDatabase();">
         <inactive s="0">DB</inactive>
         <active s="0">DB</active>
       </btn>
       <txt j="12" x="351" y="284" w="410" h="100" t="Title_C" wrap="False" l="0">Album</txt>
       <txt j="13" x="616" y="16" w="47" h="34" t="List_Item" wrap="False" l="0">100%</txt>
+      <list j="12" x="603" y="434" w="300" h="140" t="list_FF0080" headerSub="" titleSub="" contentSub="iTunes_Database" footerSub="" orientation="v" l="0" swipedelete="0" />
+      <list j="13" x="280" y="596" w="300" h="140" t="list_FF0080" headerSub="" titleSub="" contentSub="iTunes_Database" footerSub="" orientation="v" l="0" swipedelete="0" />
+      <list j="14" x="604" y="597" w="300" h="140" t="list_FF0080" headerSub="" titleSub="" contentSub="iTunes_Database" footerSub="" orientation="v" l="0" swipedelete="0" />
     </landscape>
   </page>
   <subpage name="iTunes_Instance" w="300" h="40">

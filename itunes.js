@@ -320,15 +320,21 @@ var iTunesInstance = function(instance) {
 	self.selectDatabase = function(id, command, place) {
 		log("iTunesInstance.selectDatabase(id=", id,", command=", command, ", place=", place, ")");
 
-		var join = parseInt(gui.joinStart) + 1
+		var dbJoin = "l" + (parseInt(gui.joinStart) + 1);
+		var artistJoin = "l" + (parseInt(gui.joinStart) + 2);
+		var albumJoin = "l" + (parseInt(gui.joinStart) + 3);
+		var songJoin = "l" + (parseInt(gui.joinStart) + 4);
 		
-		CF.listRemove("l"+join.toString());
 
 		var sessionParam = "session-id=" + self.sessionID;
 		var request = "";
 		var meta ="";
 		
 		if (command == "0") {
+			CF.listRemove(dbJoin);
+			CF.listRemove(artistJoin);
+			CF.listRemove(albumJoin);
+			CF.listRemove(songJoin);
 			
 			sendDAAPRequest("databases", [meta, sessionParam], function(result, error) {
 				if (error !== null) {
@@ -342,7 +348,7 @@ var iTunesInstance = function(instance) {
 						for(var i = 0; i < results.length - 1; i++) {
 							var newid = results[i][0]["miid"];
 							newid = ((newid.charCodeAt(0) << 24) | (newid.charCodeAt(1) << 16) | (newid.charCodeAt(2) << 8) | newid.charCodeAt(3));
-							CF.listAdd("l"+join.toString() , [{
+							CF.listAdd(dbJoin , [{
 								// add one item
 								s1: decodeURIComponent(escape(results[i][0]["minm"])),
 								d2: {
@@ -356,6 +362,10 @@ var iTunesInstance = function(instance) {
 
 		} else if (command == "1") {
 			
+			CF.listRemove(artistJoin);
+			CF.listRemove(albumJoin);
+			CF.listRemove(songJoin);
+		
 			self.dbid = id;
 			request = "databases/" + self.dbid + "/groups"
 			meta = "meta=dmap.itemname,dmap.itemid,dmap.persistentid,daap.songartist,daap.groupalbumcount&type=music&group-type=artists&sort=album&include-sort-headers=1&query=(('com.apple.itunes.mediakind:1','com.apple.itunes.mediakind:32')+'daap.songartist!:')"
@@ -377,7 +387,7 @@ var iTunesInstance = function(instance) {
 							
 							
 							if (newid != null) {
-								CF.listAdd("l"+join.toString() , [{
+								CF.listAdd(artistJoin , [{
 									// add one item
 									s1: decodeURIComponent(escape(results[i][0]["minm"])),
 									d2: {
@@ -396,6 +406,9 @@ var iTunesInstance = function(instance) {
 			});
 			
 		} else if (command == "2") {
+			
+			CF.listRemove(albumJoin);
+			CF.listRemove(songJoin);
 			
 			request = "databases/" + self.dbid + "/groups"
 			meta = "meta=dmap.itemname,dmap.itemid,dmap.persistentid,daap.songalbumid,daap.songartist,daap.songdatereleased,dmap.itemcount,daap.songtime,dmap.persistentid&type=music&group-type=albums&sort=album&include-sort-headers=1&query=(('daap.songartist:" + id + "','daap.songalbumartist:"+ id +"')+('com.apple.itunes.mediakind:1','com.apple.itunes.mediakind:32')+'daap.songalbum!:')"
@@ -416,7 +429,7 @@ var iTunesInstance = function(instance) {
 							newid = ((newid.charCodeAt(0) << 24) | (newid.charCodeAt(1) << 16) | (newid.charCodeAt(2) << 8) | newid.charCodeAt(3));
 							var url = "http://" + getAddress() + ":3689/databases/" + self.dbid + "/groups/" + newid + "/extra_data/artwork?mw=43&mh=43&group-type=albums&" + sessionParam; 
 							if (newid != null) {
-								CF.listAdd("l"+join.toString() , [{
+								CF.listAdd(albumJoin , [{
 									// add one item
 									s1: decodeURIComponent(escape(results[i][0]["minm"])),
 									d2: {
@@ -435,6 +448,8 @@ var iTunesInstance = function(instance) {
 			});
 
 		} else if (command=="3") {
+			
+			CF.listRemove(songJoin);
 			
 			request = "databases/" + self.dbid + "/items";
 			meta = "meta=dmap.itemname,dmap.itemid,dmap.persistentid,daap.songartist,daap.songdatereleased,dmap.itemcount,daap.songtime,dmap.persistentid,daap.songalbumid,daap.songtracknumber&type=music&group-type=albums&sort=album&include-sort-headers=1"
@@ -498,7 +513,7 @@ var iTunesInstance = function(instance) {
 							log("idtotal=", idtotal);
 
 							if (newid != null) {
-								CF.listAdd("l"+join.toString() , [{
+								CF.listAdd(songJoin , [{
 									// add one item
 									s1: decodeURIComponent(escape(results[i][0]["minm"])),
 									d2: {
@@ -512,10 +527,6 @@ var iTunesInstance = function(instance) {
 			});
 		
 		} else if (command=="4") {
-
-			/** FLORENT
-			 * WHY TWO SIMULTANEOUS REQUESTS, INSTEAD OF CHAINED ONES ?
-			 */
 
 			// clear cue
 			request = "ctrl-int/1/cue";
