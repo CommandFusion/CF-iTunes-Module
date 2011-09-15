@@ -358,14 +358,23 @@ var iTunesInstance = function(instance) {
 					var results = result[0][0];
 					if (results.length > 0) {
 						for (var i = 0; i < results.length - 1; i++) {
+							//ID for artwork and address
 							var newid = results[i][0]["miid"];
 							newid = ((newid.charCodeAt(0) << 24) | (newid.charCodeAt(1) << 16) | (newid.charCodeAt(2) << 8) | newid.charCodeAt(3));
+							var url = "http://" + getAddress() + ":3689/databases/" + self.dbid + "/groups/" + newid + "/extra_data/artwork?mw=43&mh=43&group-type=artists&" + sessionParam; 
+							
+							
 							if (newid != null) {
 								CF.listAdd("l"+join.toString() , [{
 									// add one item
 									s1: results[i][0]["minm"],
 									d2: {
 										tokens: {"[id]": results[i][0]["minm"], "[cmd]": "2"}
+									},
+									//setting artwork tokens and value
+									s10: {
+										tokens: {"HTTP:Client-DAAP-Version": 3.10, "HTTP:Viewer-Only-Client": 1},
+										value: url
 									}
 								}]);
 							}
@@ -390,14 +399,21 @@ var iTunesInstance = function(instance) {
 					var results = result[0][0];
 					if (results.length > 0) {
 						for (var i = 0; i < results.length - 1; i++) {
+							//get artwork id and url
 							var newid = results[i][0]["miid"];
 							newid = ((newid.charCodeAt(0) << 24) | (newid.charCodeAt(1) << 16) | (newid.charCodeAt(2) << 8) | newid.charCodeAt(3));
+							var url = "http://" + getAddress() + ":3689/databases/" + self.dbid + "/groups/" + newid + "/extra_data/artwork?mw=43&mh=43&group-type=albums&" + sessionParam; 
 							if (newid != null) {
 								CF.listAdd("l"+join.toString() , [{
 									// add one item
 									s1: results[i][0]["minm"],
 									d2: {
 										tokens: {"[id]": results[i][0]["minm"], "[cmd]": "3"}
+									},
+									//setting artwork tokens and value
+									s10: {
+										tokens: {"HTTP:Client-DAAP-Version": 3.10, "HTTP:Viewer-Only-Client": 1},
+										value: url
 									}
 								}]);
 							}
@@ -409,7 +425,7 @@ var iTunesInstance = function(instance) {
 		} else if (command=="3") {
 			
 			request = "databases/" + self.dbid + "/items";
-			meta = "meta=dmap.itemname,dmap.itemid,dmap.persistentid,daap.songartist,daap.songdatereleased,dmap.itemcount,daap.songtime,dmap.persistentid,daap.songalbumid&type=music&group-type=albums&sort=album&include-sort-headers=1"
+			meta = "meta=dmap.itemname,dmap.itemid,dmap.persistentid,daap.songartist,daap.songdatereleased,dmap.itemcount,daap.songtime,dmap.persistentid,daap.songalbumid,daap.sortalbumartist&type=music&group-type=albums&sort=album&include-sort-headers=1"
 			var query = "query=(('daap.songalbum:" + id + "')+('com.apple.itunes.mediakind:1','com.apple.itunes.mediakind:32'))";
 			query = encodeURI(query);
 			
@@ -589,9 +605,13 @@ var iTunesInstance = function(instance) {
 				//get volume
 				getVolume();
 				
+				//sets album join
+				var albumJoin = "s" + (parseInt(joinStart) + 2)
+				
 				//info to data
 				CF.setJoins([
 					{ join:"s"+joinStart, value:self.currentStatus["artist"] + " - " + self.currentStatus["song"]},
+					{ join:albumJoin, value:"album - " + self.currentStatus["album"]},
 					{ join:"d"+joinStart, value:self.currentStatus["playing"]},
 					{ join:artJoin, value:url}
 				]);	
