@@ -332,7 +332,7 @@ var iTunesInstance = function(instance) {
 							newid = ((newid.charCodeAt(0) << 24) | (newid.charCodeAt(1) << 16) | (newid.charCodeAt(2) << 8) | newid.charCodeAt(3));
 							CF.listAdd("l"+join.toString() , [{
 								// add one item
-								s1: results[i][0]["minm"],
+								s1: decodeURIComponent(escape(results[i][0]["minm"])),
 								d2: {
 									tokens: {"[id]": newid, "[cmd]": "1"}
 								}
@@ -367,9 +367,9 @@ var iTunesInstance = function(instance) {
 							if (newid != null) {
 								CF.listAdd("l"+join.toString() , [{
 									// add one item
-									s1: results[i][0]["minm"],
+									s1: decodeURIComponent(escape(results[i][0]["minm"])),
 									d2: {
-										tokens: {"[id]": results[i][0]["minm"], "[cmd]": "2"}
+										tokens: {"[id]": decodeURIComponent(escape(results[i][0]["minm"])), "[cmd]": "2"}
 									},
 									//setting artwork tokens and value
 									s10: {
@@ -406,9 +406,9 @@ var iTunesInstance = function(instance) {
 							if (newid != null) {
 								CF.listAdd("l"+join.toString() , [{
 									// add one item
-									s1: results[i][0]["minm"],
+									s1: decodeURIComponent(escape(results[i][0]["minm"])),
 									d2: {
-										tokens: {"[id]": results[i][0]["minm"], "[cmd]": "3"}
+										tokens: {"[id]": decodeURIComponent(escape(results[i][0]["minm"])), "[cmd]": "3"}
 									},
 									//setting artwork tokens and value
 									s10: {
@@ -484,7 +484,7 @@ var iTunesInstance = function(instance) {
 							if (newid != null) {
 								CF.listAdd("l"+join.toString() , [{
 									// add one item
-									s1: results[i][0]["minm"],
+									s1: decodeURIComponent(escape(results[i][0]["minm"])),
 									d2: {
 										tokens: {"[id]": idtotal + "z", "[cmd]": "4", "[place]": trackNum }
 									}
