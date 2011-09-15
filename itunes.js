@@ -218,7 +218,7 @@ var iTunesInstance = function(instance) {
 				logObject(result);
 
 				//new instance of ituneHttp
-				self.ituneHttp = new ituneHttp("ituneHttp", "incoming data", getAddress());
+				self.ituneHttp = new ituneHttp("ituneHttp", "daap", getAddress());
 				
 				
 				// starts polling status
@@ -449,8 +449,12 @@ var iTunesInstance = function(instance) {
 						for (var i = 0; i < results.length - 1; i++) {
 						
 							//get track number
-							var trackNum = results[i][0]["astn"]
-							trackNum = ((trackNum.charCodeAt(0) << 24) | (trackNum.charCodeAt(1) << 16) | (trackNum.charCodeAt(2) << 8) | trackNum.charCodeAt(3));
+							var trackNum = results[i][0]["astn"];
+							if(trackNum.length == 2){
+								trackNum = ((trackNum.charCodeAt(0) << 8) | (trackNum.charCodeAt(1)));
+							}else if(trackNum.length == 4){
+								trackNum = ((trackNum.charCodeAt(0) << 24) | (trackNum.charCodeAt(1) << 16) | (trackNum.charCodeAt(2) << 8) | (trackNum.charCodeAt(3))  );
+							}
 							newid = results[i][0]["asai"];
 							//var newid = result[0][0][i][0]["mper"];
 							var tempbin = "";
@@ -494,7 +498,7 @@ var iTunesInstance = function(instance) {
 									// add one item
 									s1: decodeURIComponent(escape(results[i][0]["minm"])),
 									d2: {
-										tokens: {"[id]": idtotal + "z", "[cmd]": "4", "[place]": trackNum }
+										tokens: {"[id]": idtotal + "z", "[cmd]": "4", "[place]": trackNum - 1 }
 									}
 								}]);
 							}
@@ -520,24 +524,24 @@ var iTunesInstance = function(instance) {
 					log("Got Music");
 					//CF.logObject(result);
 					
-					// TODO
+					var cmd = "command=play&query='daap.songalbumid:" + id + "'&index=" + place + "&sort=album";
+			
+					sendDAAPRequest(request, [cmd, sessionParam], function(result, error) {
+						if (error !== null) {
+							log("Trying to Play from " + description());
+							log("Error = " + error);
+						} else {
+							CF.log("Got Music");
+							//CF.logObject(result);
+					
+							
+						}	
+					});
 				}	
 	
 			});
 			
-			var cmd = "command=play&query='daap.songalbumid:" + id + "'&index=" + place + "&sort=album";
 			
-			sendDAAPRequest(request, [cmd, sessionParam], function(result, error) {
-				if (error !== null) {
-					log("Trying to Play from " + description());
-					log("Error = " + error);
-				} else {
-					CF.log("Got Music");
-					//CF.logObject(result);
-					
-					// TODO
-				}	
-			});
 		}
 	};
 	
@@ -576,6 +580,57 @@ var iTunesInstance = function(instance) {
 		});
 	};
 
+	//handles data returned from percistant connection
+	self.statusFeedback = function(body) {
+			//decode packet
+			var result = decodeDAAP(body);
+			
+			var joinStart = gui.joinStart;
+			
+			log("Received playing info");
+
+			//package up data for return
+			var status = {};
+			status["artist"] = result[0][0]["cana"];
+			status["song"] = result[0][0]["cann"];
+			status["album"] = result[0][0]["canl"];
+				
+			if (result[0][0]["caps"].charCodeAt(0) == 3) {
+				status["playing"] = 0;
+			} else if(result[0][0]["caps"].charCodeAt(0) == 4) {
+				status["playing"] = 1;
+			}
+
+			self.revision = ((result[0][0]["cmsr"].charCodeAt(0) << 24) | (result[0][0]["cmsr"].charCodeAt(1) << 16) | (result[0][0]["cmsr"].charCodeAt(2) << 8) | (result[0][0]["cmsr"].charCodeAt(3)));
+			self.currentStatus = status;
+				
+			//get artwork
+			var url = "http://" + getAddress() + ":3689/" + "ctrl-int/1/nowplayingartwork?mw=320&mh=320&session-id=" + self.sessionID;
+			var artJoin = "s" + (parseInt(joinStart)+1);
+			//headers for the image
+			CF.setToken(artJoin, "HTTP:Client-DAAP-Version", 3.10);
+			CF.setToken(artJoin, "HTTP:Viewer-Only-Client", 1);
+
+			//gets speakers
+			getSpeakers();
+				
+			//get volume
+			getVolume();
+				
+			//sets album join
+			var albumJoin = "s" + (parseInt(joinStart) + 2)
+				
+			//info to data
+			CF.setJoins([
+				{ join:"s"+joinStart, value:self.currentStatus["artist"] + " - " + self.currentStatus["song"]},
+				{ join:albumJoin, value:"album - " + self.currentStatus["album"]},
+				{ join:"d"+joinStart, value:self.currentStatus["playing"]},
+				{ join:artJoin, value:url}
+			]);	
+			self.ituneHttp.sendHTTP(self.revision, self.sessionID);
+	
+	}
+	
 	self.status = function(joinStart) {
 		log("iTunesInstance.status(joinStart=", joinStart, ")");
 
@@ -583,59 +638,7 @@ var iTunesInstance = function(instance) {
 		var sessionParam = "session-id=" + self.sessionID;
 		
 		self.ituneHttp.sendHTTP(self.revision, self.sessionID);
-		getSpeakers();
-		getVolume();
 		
-		/*sendDAAPRequest("ctrl-int/1/playstatusupdate", ["revision-number=" + self.revision, "daap-no-disconnect=1", sessionParam], function(result,error) {
-			if (error !== null) {
-				log("Trying to get playing info from ", description());
-				log("Error = ", error);
-			} else {
-				log("Received playing info");
-
-				//package up data for return
-				var status = {};
-				status["artist"] = result[0][0]["cana"];
-				status["song"] = result[0][0]["cann"];
-				status["album"] = result[0][0]["canl"];
-				
-				if (result[0][0]["caps"].charCodeAt(0) == 3) {
-					status["playing"] = 0;
-				} else if(result[0][0]["caps"].charCodeAt(0) == 4) {
-					status["playing"] = 1;
-				}
-
-				self.revision = ((result[0][0]["cmsr"].charCodeAt(0) << 24) | (result[0][0]["cmsr"].charCodeAt(1) << 16) | (result[0][0]["cmsr"].charCodeAt(2) << 8) | (result[0][0]["cmsr"].charCodeAt(3)));
-				self.currentStatus = status;
-				
-				//get artwork
-				var url = "http://" + getAddress() + ":3689/" + "ctrl-int/1/nowplayingartwork?mw=320&mh=320&session-id=" + self.sessionID;
-				var artJoin = "s" + (parseInt(joinStart)+1);
-				//headers for the image
-				CF.setToken(artJoin, "HTTP:Client-DAAP-Version", 3.10);
-				CF.setToken(artJoin, "HTTP:Viewer-Only-Client", 1);
-
-				//gets speakers
-				getSpeakers();
-				
-				//get volume
-				getVolume();
-				
-				//sets album join
-				var albumJoin = "s" + (parseInt(joinStart) + 2)
-				
-				//info to data
-				CF.setJoins([
-					{ join:"s"+joinStart, value:self.currentStatus["artist"] + " - " + self.currentStatus["song"]},
-					{ join:albumJoin, value:"album - " + self.currentStatus["album"]},
-					{ join:"d"+joinStart, value:self.currentStatus["playing"]},
-					{ join:artJoin, value:url}
-				]);	
-				self.status(joinStart);
-				
-			}
-			
-		});*/
 	}
 	
 	self.action = function(cmd) {
