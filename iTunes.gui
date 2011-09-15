@@ -9,6 +9,9 @@
     <imagefolder>
     </imagefolder>
     <debug loaderrors="0" connectionerrors="0" />
+    <devices>
+      <device name="ipad2 chris">4BA5B86365EB76A17546DA9AC6EE1956</device>
+    </devices>
   </properties>
   <systems>
     <system name="iTunesPairingServer" ip="0.0.0.0" origin="8090" port="0" protocol="tcp" alwayson="0" accept="1" ssl="0" maxconnections="0" heartbeatRx="" heartbeatTx="" heartbeatMode="-1" eom="" connectionStatus="0" disconnectionStatus="0">
@@ -19,6 +22,7 @@
       <fb name="Pairing request" regex="GET /pair\?pairingcode=[0-9A-F]+&amp;servicename=[0-9A-F]+ " />
       <fb name="All traffic" regex=".*" />
     </system>
+    <system name="ituneHttp" ip="192.168.0.1" port="10210" protocol="tcp" alwayson="1" accept="0" ssl="0" maxconnections="0" heartbeatRx="" heartbeatTx="" heartbeatMode="-1" eom="" connectionStatus="0" disconnectionStatus="0" />
   </systems>
   <themes>
     <theme type="background" name=".landscape"><![CDATA[background-color: #8080FF;]]></theme>
@@ -40,6 +44,7 @@
     <script name="itunes.js" />
     <script name="gui.js" />
     <script name="bigInt.js" />
+    <script name="ituneHttp.js" />
   </scripts>
   <page name="Main" j="0" transition="None" subtype="None" time="0" ease="" start="1">
     <portrait />

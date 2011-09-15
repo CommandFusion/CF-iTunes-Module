@@ -57,7 +57,11 @@ var iTunesInstance = function(instance) {
 		sessionID: "",
 		songStatus: [],
 		revision: 1,
-		dbid: ""
+		dbid: "",
+		
+		
+		//
+		ituneHttp: ""
 	};
 
 	
@@ -213,6 +217,10 @@ var iTunesInstance = function(instance) {
 				log("Session ID = ", intSession);
 				logObject(result);
 
+				//new instance of ituneHttp
+				self.ituneHttp = new ituneHttp("ituneHttp", "incoming data", getAddress());
+				
+				
 				// starts polling status
 				self.status(gui.joinStart);
 			}
@@ -573,8 +581,12 @@ var iTunesInstance = function(instance) {
 
 		// grabs the status also gets speakers 
 		var sessionParam = "session-id=" + self.sessionID;
-	
-		sendDAAPRequest("ctrl-int/1/playstatusupdate", ["revision-number=" + self.revision, "daap-no-disconnect=1", sessionParam], function(result,error) {
+		
+		self.ituneHttp.sendHTTP(self.revision, self.sessionID);
+		getSpeakers();
+		getVolume();
+		
+		/*sendDAAPRequest("ctrl-int/1/playstatusupdate", ["revision-number=" + self.revision, "daap-no-disconnect=1", sessionParam], function(result,error) {
 			if (error !== null) {
 				log("Trying to get playing info from ", description());
 				log("Error = ", error);
@@ -623,7 +635,7 @@ var iTunesInstance = function(instance) {
 				
 			}
 			
-		});
+		});*/
 	}
 	
 	self.action = function(cmd) {
