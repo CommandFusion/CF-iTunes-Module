@@ -425,7 +425,7 @@ var iTunesInstance = function(instance) {
 		} else if (command=="3") {
 			
 			request = "databases/" + self.dbid + "/items";
-			meta = "meta=dmap.itemname,dmap.itemid,dmap.persistentid,daap.songartist,daap.songdatereleased,dmap.itemcount,daap.songtime,dmap.persistentid,daap.songalbumid,daap.sortalbumartist&type=music&group-type=albums&sort=album&include-sort-headers=1"
+			meta = "meta=dmap.itemname,dmap.itemid,dmap.persistentid,daap.songartist,daap.songdatereleased,dmap.itemcount,daap.songtime,dmap.persistentid,daap.songalbumid,daap.songtracknumber&type=music&group-type=albums&sort=album&include-sort-headers=1"
 			var query = "query=(('daap.songalbum:" + id + "')+('com.apple.itunes.mediakind:1','com.apple.itunes.mediakind:32'))";
 			query = encodeURI(query);
 			
@@ -439,6 +439,10 @@ var iTunesInstance = function(instance) {
 					var results = result[0][0];
 					if (results.length > 0) {
 						for (var i = 0; i < results.length - 1; i++) {
+						
+							//get track number
+							var trackNum = results[i][0]["astn"]
+							trackNum = ((trackNum.charCodeAt(0) << 24) | (trackNum.charCodeAt(1) << 16) | (trackNum.charCodeAt(2) << 8) | trackNum.charCodeAt(3));
 							newid = results[i][0]["asai"];
 							//var newid = result[0][0][i][0]["mper"];
 							var tempbin = "";
@@ -454,7 +458,7 @@ var iTunesInstance = function(instance) {
 								}
 								binaryid = binaryid + tempbin;
 							}
-
+							
 							for (var a = 0; a < binaryid.length; a++) {
 								//albumid += (parseInt(binaryid[a]) * Math.pow(2, ((binaryid.length-1)-a)));
 								if (a == binaryid.length-1) {
@@ -482,7 +486,7 @@ var iTunesInstance = function(instance) {
 									// add one item
 									s1: results[i][0]["minm"],
 									d2: {
-										tokens: {"[id]": idtotal + "z", "[cmd]": "4", "[place]": i}
+										tokens: {"[id]": idtotal + "z", "[cmd]": "4", "[place]": trackNum }
 									}
 								}]);
 							}
