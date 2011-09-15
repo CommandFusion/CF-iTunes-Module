@@ -95,6 +95,7 @@
         <active s="0">DB</active>
       </btn>
       <txt j="12" x="351" y="284" w="410" h="100" t="Title_C" wrap="False" l="0">Album</txt>
+      <txt j="13" x="616" y="16" w="47" h="34" t="List_Item" wrap="False" l="0">100%</txt>
     </landscape>
   </page>
   <subpage name="iTunes_Instance" w="300" h="40">

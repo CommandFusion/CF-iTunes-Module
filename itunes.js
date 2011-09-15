@@ -282,9 +282,13 @@ var iTunesInstance = function(instance) {
 				volume = ((volume.charCodeAt(0) << 24) | (volume.charCodeAt(1) << 16) | (volume.charCodeAt(2) << 8) | volume.charCodeAt(3));
 
 				log("Received Volume info: volume=", volume);
-
+				
+				//setting volume join
+				var volumeJoin = "s" + (parseInt(gui.joinStart) + 3);
+				
 				var sliderVal = Math.max(0, Math.min((parseInt(volume) / 100) * 65535, 65535));
 				CF.setJoin("a" + gui.joinStart, sliderVal);
+				CF.setJoin(volumeJoin, volume +"%");
 			}
 		});
 	}
@@ -548,6 +552,11 @@ var iTunesInstance = function(instance) {
 	self.setVolume = function(volume) {
 		log("iTunesInstance.setVolume(volume=", volume, ")")
 
+		//set join for volume
+		var volumeJoin = "s" + (parseInt(gui.joinStart)+3);
+		CF.setJoin(volumeJoin, volume +"%");
+
+		
 		var sessionParam = "session-id=" + self.sessionID;
 		
 		//ctrl-int/1/setproperty?dmcp.volume=100.000000&session-id=xxxxxx
