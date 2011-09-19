@@ -367,9 +367,9 @@ var iTunesInstance = function(instance) {
 			CF.listRemove(songJoin);
 		
 			self.dbid = id;
-			request = "databases/" + self.dbid + "/groups"
+			request = "databases/" + self.dbid + "/groups";
 			meta = "meta=dmap.itemname,dmap.itemid,dmap.persistentid,daap.songartist,daap.groupalbumcount&type=music&group-type=artists&sort=album&include-sort-headers=1&query=(('com.apple.itunes.mediakind:1','com.apple.itunes.mediakind:32')+'daap.songartist!:')"
-
+			
 			sendDAAPRequest(request, [meta, sessionParam], function(result, error) {
 				if (error !== null) {
 					log("Trying to database from ", description());
