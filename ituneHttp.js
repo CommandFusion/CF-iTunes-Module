@@ -1,5 +1,6 @@
 function LOG_ITUNEHTTP() {
 	if (CF.debug) {
+		//Logs the iTunesHttp
 		var s = "ituneHttp: ";
 		for (var i=0; i < arguments.length; i++) {
 			s += arguments[i].toString();
@@ -9,18 +10,20 @@ function LOG_ITUNEHTTP() {
 };
 
 
+//The function for the iTunesHttp, it handles send http request and also parses the http packet back
 var ituneHttp = function(systemName, feedbackName, ip) {
 	
 	
-
+	//global settings for the iTuneshttp function
 	var self = {
 		systemIP: ""
 	};
 	
-	//Crafts the http request
+	//Crafts the http request for the status message, keeps the connection open as the normal http request kills the connection
 	self.sendHTTP = function(Rev, session) {
-		
+		//the get request for the packet
 		var request = "/ctrl-int/1/playstatusupdate";
+		//setting the params for the packet 
 		var param = "?revision-number=" + Rev + "&daap-no-disconnect=1&session-id="+session;
 		
 		//All the headers
@@ -41,9 +44,11 @@ var ituneHttp = function(systemName, feedbackName, ip) {
 	
 	//decode incoming packets
 	self.onIncomingData =function(theSystem, matchedString){
+		//split the strings
 		var lines = matchedString.split("\r\n");
 		LOG_ITUNEHTTP(lines);
 		
+		//cycle though the lines and return the daap packet to be decoded 
 		for(var i = 0; i < lines.length; i++){
 			if(lines[i].substr(0,4) == "cmst"){
 				gui.server.statusFeedback(lines[i]);
@@ -53,14 +58,14 @@ var ituneHttp = function(systemName, feedbackName, ip) {
 	
 	};
 	
-	//sets the ip address
+	//sets the ip address dynamically  
 	CF.setSystemProperties("ituneHttp", {
 		address: ip,
 		port: 3689 
 	});
 	self.systemIP = ip;
 	
-	
+	//sets up the watch function for the feedback
 	CF.watch(CF.FeedbackMatchedEvent, systemName, feedbackName, self.onIncomingData);
 	
 	return self;
