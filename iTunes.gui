@@ -14,15 +14,15 @@
     </devices>
   </properties>
   <systems>
-    <system name="iTunesPairingServer" ip="0.0.0.0" origin="8090" port="0" protocol="tcp" alwayson="0" accept="1" ssl="0" maxconnections="0" heartbeatRx="" heartbeatTx="" heartbeatMode="-1" eom="" connectionStatus="0" disconnectionStatus="0">
+    <system name="iTunesPairingServer" ip="0.0.0.0" origin="8090" port="0" protocol="tcp" alwayson="0" accept="1" acceptBroadcasts="0" ssl="0" maxconnections="0" heartbeatRx="" heartbeatTx="" heartbeatMode="-1" eom="" connectionStatus="0" disconnectionStatus="0">
       <cmd name="SelectInstance" js="selectInstance(data);" jsSendsCommand="True">[name]</cmd>
       <cmd name="SelectSpeakers" js="selectSpeakers(data);" jsSendsCommand="True">[id]</cmd>
       <cmd name="Volume" js="setVolume(data);" jsSendsCommand="True">[sliderval]</cmd>
-      <cmd name="SelectDatabase" js="selectDatabase(data);" jsSendsCommand="True">[id]:[cmd]:[place]</cmd>
+      <cmd name="SelectDatabase" js="selectDatabase(data);" jsSendsCommand="True">[id]\xFF[cmd]\xFF[place]\xFF[perid]</cmd>
       <fb name="Pairing request" regex="GET /pair\?pairingcode=[0-9A-F]+&amp;servicename=[0-9A-F]+ " />
       <fb name="All traffic" regex=".*" />
     </system>
-    <system name="ituneHttp" ip="192.168.0.1" port="10210" protocol="tcp" alwayson="1" accept="0" ssl="0" maxconnections="0" heartbeatRx="" heartbeatTx="" heartbeatMode="-1" eom="" connectionStatus="0" disconnectionStatus="0">
+    <system name="ituneHttp" ip="192.168.0.1" port="10210" protocol="tcp" alwayson="1" accept="0" acceptBroadcasts="0" ssl="0" maxconnections="0" heartbeatRx="" heartbeatTx="" heartbeatMode="-1" eom="" connectionStatus="0" disconnectionStatus="0">
       <fb name="daap" regex="(.*)" />
     </system>
   </systems>
@@ -37,6 +37,7 @@
     <theme type="gauge" name=".Slider[state='1']"><![CDATA[ background-image: url(gauge-02-a.png);]]></theme>
     <theme type="list" name=".list_FF8040"><![CDATA[background-color: #FF8040;]]></theme>
     <theme type="list" name=".list_FF0000"><![CDATA[background-color: #FF0000;]]></theme>
+    <theme type="list" name=".list_FF0080"><![CDATA[background-color: #FF0080;]]></theme>
     <theme type="list" name=".list_FF0080"><![CDATA[background-color: #FF0080;]]></theme>
     <theme type="list" name=".list_FF0080"><![CDATA[background-color: #FF0080;]]></theme>
     <theme type="list" name=".list_FF0080"><![CDATA[background-color: #FF0080;]]></theme>
@@ -92,16 +93,13 @@
       <img x="766" y="44" w="237" h="237" j="11" clickthrough="0" refresh="0" l="0" noCache="1" downloadIndicator="0" clearOnURLChange="0" />
       <list j="10" x="3" y="382" w="267" h="148" t="list_FF0000" headerSub="" titleSub="" contentSub="iTunes_Speakers" footerSub="" orientation="v" l="0" swipedelete="0" />
       <slider j="10" d="0" x="505" y="25" w="104" h="13" min="0" max="100" decimals="0" pressCmd="Volume" dragCmd="Volume" releaseCmd="Volume" unit="decimal" t="Slider" sim="1" l="0" />
-      <list j="11" x="282" y="432" w="300" h="140" t="list_FF0080" headerSub="" titleSub="" contentSub="iTunes_Database" footerSub="" orientation="v" l="0" swipedelete="0" />
-      <btn j="0" x="837" y="323" w="114" h="60" t="btn_sqr_sml" flip="None" sim="0" l="0" s="1" js="selectDatabase();">
-        <inactive s="0">DB</inactive>
-        <active s="0">DB</active>
-      </btn>
+      <list j="11" x="352" y="432" w="300" h="140" t="list_FF0080" headerSub="" titleSub="" contentSub="iTunes_Database" footerSub="" orientation="v" l="0" swipedelete="0" />
       <txt j="12" x="351" y="284" w="410" h="100" t="Title_C" wrap="False" l="0">Album</txt>
       <txt j="13" x="616" y="16" w="47" h="34" t="List_Item" wrap="False" l="0">100%</txt>
-      <list j="12" x="603" y="434" w="300" h="140" t="list_FF0080" headerSub="" titleSub="" contentSub="iTunes_Database" footerSub="" orientation="v" l="0" swipedelete="0" />
-      <list j="13" x="280" y="596" w="300" h="140" t="list_FF0080" headerSub="" titleSub="" contentSub="iTunes_Database" footerSub="" orientation="v" l="0" swipedelete="0" />
-      <list j="14" x="604" y="597" w="300" h="140" t="list_FF0080" headerSub="" titleSub="" contentSub="iTunes_Database" footerSub="" orientation="v" l="0" swipedelete="0" />
+      <list j="12" x="673" y="434" w="300" h="140" t="list_FF0080" headerSub="" titleSub="" contentSub="iTunes_Database" footerSub="" orientation="v" l="0" swipedelete="0" />
+      <list j="13" x="350" y="596" w="300" h="140" t="list_FF0080" headerSub="" titleSub="" contentSub="iTunes_Database" footerSub="" orientation="v" l="0" swipedelete="0" />
+      <list j="14" x="674" y="597" w="300" h="140" t="list_FF0080" headerSub="" titleSub="" contentSub="iTunes_Database" footerSub="" orientation="v" l="0" swipedelete="0" />
+      <list j="15" x="10" y="592" w="300" h="140" t="list_FF0080" headerSub="" titleSub="" contentSub="iTunes_Database" footerSub="" orientation="v" l="0" swipedelete="0" />
     </landscape>
   </page>
   <subpage name="iTunes_Instance" w="300" h="40">

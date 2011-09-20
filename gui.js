@@ -65,27 +65,22 @@ function selectInstance(name) {
 
 function selectDatabase(id) {
 	
-	if(id == null){
-		gui.server.selectDatabase("", "0");
-		return null;
-	}
-	
-	var idSplit = id.split(":");
-	if(idSplit.length == 2){
-		if (idSplit[1] == "[cmd]") {
-			gui.server.selectDatabase(idSplit[0], "0");
-		}else {
-			gui.server.selectDatabase(idSplit[0], idSplit[1]);
-		}
-	} else if (idSplit.length == 3) {
+	var idSplit = id.split("\xFF");
+	if (idSplit.length == 4) {
 			if(idSplit[2] != "[place]"){
 				gui.server.selectDatabase(idSplit[0].substr(0,idSplit[0].length -1), idSplit[1], idSplit[2]);
 			}else {
-				gui.server.selectDatabase(idSplit[0], idSplit[1]);
+				if(idSplit[3] != "[perid]") {
+					gui.server.selectDatabase(idSplit[0], idSplit[1], idSplit[2], idSplit[3]);
+				}
+				else {
+					gui.server.selectDatabase(idSplit[0], idSplit[1]);
+				}
 			}
 	}
 
 }
+
 
 function setVolume(volume) {
 

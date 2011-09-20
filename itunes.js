@@ -58,10 +58,13 @@ var iTunesInstance = function(instance) {
 		songStatus: [],
 		revision: 1,
 		dbid: "",
+	
+		ituneHttp: "",
 		
 		
-		//
-		ituneHttp: ""
+		//playlist globalvars
+		dbPerId: "",
+		playlistPerId: ""
 	};
 
 	
@@ -315,9 +318,28 @@ var iTunesInstance = function(instance) {
 				itunesLogin();
 			}
 		});
+		
+		
+		
+		//Populates first list
+		var actionJoin = "l" + (parseInt(gui.joinStart) + 5);
+		//populate the list
+		CF.listAdd(actionJoin , [{
+								// add Libary
+								s1: "Library",
+								d2: {
+									tokens: {"[cmd]": "0"}
+								}
+							},
+							{
+								s1: "Playlists",
+								d2: {
+									tokens: {"[cmd]": "8"}
+								}
+							}]);
 	};
 	
-	self.selectDatabase = function(id, command, place) {
+	self.selectDatabase = function(id, command, place, perid) {
 		log("iTunesInstance.selectDatabase(id=", id,", command=", command, ", place=", place, ")");
 
 		var dbJoin = "l" + (parseInt(gui.joinStart) + 1);
@@ -331,6 +353,10 @@ var iTunesInstance = function(instance) {
 		var meta ="";
 		
 		if (command == "0") {
+		//
+		//Starts getting the library databases
+		//
+	
 			CF.listRemove(dbJoin);
 			CF.listRemove(artistJoin);
 			CF.listRemove(albumJoin);
@@ -346,29 +372,40 @@ var iTunesInstance = function(instance) {
 					var results = result[0][0];
 					if (results.length > 0) {
 						for(var i = 0; i < results.length - 1; i++) {
+							//check what kind of database
+							var dbType = results[i][0]["mdbk"];
+							dbType = ((dbType.charCodeAt(0) << 24) | (dbType.charCodeAt(1) << 16) | (dbType.charCodeAt(2) << 8) | dbType.charCodeAt(3));
+							
 							var newid = results[i][0]["miid"];
 							newid = ((newid.charCodeAt(0) << 24) | (newid.charCodeAt(1) << 16) | (newid.charCodeAt(2) << 8) | newid.charCodeAt(3));
-							CF.listAdd(dbJoin , [{
-								// add one item
-								s1: decodeURIComponent(escape(results[i][0]["minm"])),
-								d2: {
-									tokens: {"[id]": newid, "[cmd]": "1"}
-								}
+							
+							//only display correct kind of dbs
+							if (dbType != "100") {
+								CF.listAdd(dbJoin , [{
+									// add one item
+									s1: decodeURIComponent(escape(results[i][0]["minm"])),
+									d2: {
+										tokens: {"[id]": newid, "[cmd]": "1", "[perid]": encodeToHex(results[i][0]["mper"])}
+									}
 							}]);
+							}
 						}
 					}
 				}
 			});
 
 		} else if (command == "1") {
-			
+		//
+		//Starts getting the library artists
+		//
 			CF.listRemove(artistJoin);
 			CF.listRemove(albumJoin);
 			CF.listRemove(songJoin);
 		
 			self.dbid = id;
 			request = "databases/" + self.dbid + "/groups";
-			meta = "meta=dmap.itemname,dmap.itemid,dmap.persistentid,daap.songartist,daap.groupalbumcount&type=music&group-type=artists&sort=album&include-sort-headers=1&query=(('com.apple.itunes.mediakind:1','com.apple.itunes.mediakind:32')+'daap.songartist!:')"
+			
+			meta = "meta=dmap.itemname,dmap.itemid,dmap.persistentid,daap.songartist,daap.groupalbumcount&type=music&group-type=artists&sort=album&include-sort-headers=1&query=()"
 			
 			sendDAAPRequest(request, [meta, sessionParam], function(result, error) {
 				if (error !== null) {
@@ -406,7 +443,9 @@ var iTunesInstance = function(instance) {
 			});
 			
 		} else if (command == "2") {
-			
+		//
+		//Starts getting the library albums based on the artists
+		//
 			CF.listRemove(albumJoin);
 			CF.listRemove(songJoin);
 			
@@ -448,7 +487,9 @@ var iTunesInstance = function(instance) {
 			});
 
 		} else if (command=="3") {
-			
+		//
+		//Starts getting the library songs based on the album
+		//
 			CF.listRemove(songJoin);
 			
 			request = "databases/" + self.dbid + "/items";
@@ -527,7 +568,9 @@ var iTunesInstance = function(instance) {
 			});
 		
 		} else if (command=="4") {
-
+		//
+		//Starts getting the library song playing with the album playlist
+		//
 			// clear cue
 			request = "ctrl-int/1/cue";
 
@@ -557,6 +600,166 @@ var iTunesInstance = function(instance) {
 			});
 			
 			
+		} else if (command=="5") {
+		//
+		//Starts getting the playlists from playlist db
+		//
+			CF.listRemove(artistJoin);
+			CF.listRemove(albumJoin);
+			CF.listRemove(songJoin);
+		
+			self.dbid = id;
+			
+			//dbperid
+			self.dbPerId = perid;
+			
+			
+			request = "databases/" + self.dbid + "/containers";
+			meta = "meta=dmap.itemname,dmap.itemid,dmap.persistentid,daap.songartist,daap.groupalbumcount&type=music&group-type=artists&sort=album&include-sort-headers=1&query=()"
+			
+			sendDAAPRequest(request, [meta, sessionParam], function(result, error) {
+				if (error !== null) {
+					log("Trying to database from ", description());
+					log("Error = " + error);
+				} else {
+					log("Got result:");
+					logObject(result);
+					var results = result[0][0];
+					if (results.length > 0) {
+						for (var i = 0; i < results.length - 1; i++) {
+							//ID for artwork and address
+							var newid = results[i][0]["miid"];
+							newid = ((newid.charCodeAt(0) << 24) | (newid.charCodeAt(1) << 16) | (newid.charCodeAt(2) << 8) | newid.charCodeAt(3));
+							
+							
+							
+							if (newid != null) {
+								CF.listAdd(artistJoin , [{
+									// add one item
+									s1: decodeURIComponent(escape(results[i][0]["minm"])),
+									d2: {
+										tokens: {"[id]": newid, "[cmd]": "6", "[perid]": encodeToHex(results[i][0]["mper"])}
+									},
+								}]);
+							}
+						}
+					}
+				}
+			});
+		
+		
+		} else if (command=="6") {
+		//
+		//Starts getting the playlist songs from playlist
+		//
+			CF.listRemove(albumJoin);
+			CF.listRemove(songJoin);
+		
+			//set Playlist id
+			self.playlistPerId = perid;
+		
+			request = "databases/" + self.dbid + "/containers/" + id + "/items";
+			meta = "meta=dmap.itemname,dmap.itemid,daap.songartist,daap.songalbum,dmap.containeritemid,dmap.persistentid,com.apple.itunes.has-video,daap.songdisabled,com.apple.itunes.mediakind,daap.songtime&type=music"
+			
+			sendDAAPRequest(request, [meta, sessionParam], function(result, error) {
+				if (error !== null) {
+					log("Trying to database from ", description());
+					log("Error = " + error);
+				} else {
+					log("Got result:");
+					logObject(result);
+					var results = result[0][0];
+					if (results.length > 0) {
+						for (var i = 0; i < results.length - 1; i++) {
+							//ID for artwork and address
+							var newid = results[i][0]["mcti"];
+							newid = ((newid.charCodeAt(0) << 24) | (newid.charCodeAt(1) << 16) | (newid.charCodeAt(2) << 8) | newid.charCodeAt(3));
+							
+							if (newid != null) {
+								CF.listAdd(songJoin , [{
+									// add one item
+									s1: decodeURIComponent(escape(results[i][0]["minm"])),
+									d2: {
+										tokens: {"[id]": encodeToHex(results[i][0]["mcti"]), "[cmd]": "7", "[perid]": encodeToHex(results[i][0]["mper"])}
+									},
+								}]);
+							}
+						}
+					}
+				}
+			});
+		
+		} else if (command == "7") {
+		//
+		//Starts playing playlist from selected song
+		//
+			// clear cue
+			request = "ctrl-int/1/cue";
+			sendDAAPRequest(request, ["command=clear", sessionParam], function(result, error) {
+				if (error !== null) {
+					log("Trying to Play from " + description());
+					log("Error = " + error);
+				} else {
+					log("Got Music");
+					//CF.logObject(result);
+					request = "ctrl-int/1/playspec"
+					var cmd = "database-spec='dmap.persistentid:0x" + self.dbPerId + "'&container-spec='dmap.persistentid:0x" + self.playlistPerId +"'&container-item-spec='dmap.containeritemid:0x" + id + "'";
+			
+					sendDAAPRequest(request, [cmd, sessionParam], function(result, error) {
+						if (error !== null) {
+							log("Trying to Play from " + description());
+							log("Error = " + error);
+						} else {
+							CF.log("Got Music");
+							//CF.logObject(result);
+					
+							
+						}	
+					});
+				}
+		
+			});
+		} else if (command == "8") {
+		//
+		//Starts getting the playlist databases
+		//
+			CF.listRemove(dbJoin);
+			CF.listRemove(artistJoin);
+			CF.listRemove(albumJoin);
+			CF.listRemove(songJoin);
+			
+			sendDAAPRequest("databases", [meta, sessionParam], function(result, error) {
+				if (error !== null) {
+					log("Trying to database from " + description());
+					log("Error = " + error);
+				} else {
+					log("Got Databases:");
+					logObject(result);
+					var results = result[0][0];
+					if (results.length > 0) {
+						for(var i = 0; i < results.length - 1; i++) {
+						
+							//check what kind of database
+							var dbType = results[i][0]["mdbk"];
+							dbType = ((dbType.charCodeAt(0) << 24) | (dbType.charCodeAt(1) << 16) | (dbType.charCodeAt(2) << 8) | dbType.charCodeAt(3));
+						
+							var newid = results[i][0]["miid"];
+							newid = ((newid.charCodeAt(0) << 24) | (newid.charCodeAt(1) << 16) | (newid.charCodeAt(2) << 8) | newid.charCodeAt(3));
+							//only display correct kind of dbs
+							if (dbType != "100") {
+							CF.listAdd(dbJoin , [{
+									// add one item
+									s1: decodeURIComponent(escape(results[i][0]["minm"])),
+									d2: {
+										tokens: {"[id]": newid, "[cmd]": "5", "[perid]": encodeToHex(results[i][0]["mper"])}
+									}
+								}]);
+							}
+						}
+					}
+				}
+			});
+		
 		}
 	};
 	
@@ -614,7 +817,10 @@ var iTunesInstance = function(instance) {
 			status["artist"] = result[0][0]["cana"];
 			status["song"] = result[0][0]["cann"];
 			status["album"] = result[0][0]["canl"];
-				
+			
+			
+			
+			
 			if (result[0][0]["caps"].charCodeAt(0) == 3) {
 				status["playing"] = 0;
 			} else if(result[0][0]["caps"].charCodeAt(0) == 4) {
@@ -640,13 +846,15 @@ var iTunesInstance = function(instance) {
 			//sets album join
 			var albumJoin = "s" + (parseInt(joinStart) + 2)
 				
-			//info to data
-			CF.setJoins([
-				{ join:"s"+joinStart, value:self.currentStatus["artist"] + " - " + self.currentStatus["song"]},
-				{ join:albumJoin, value:"album - " + self.currentStatus["album"]},
-				{ join:"d"+joinStart, value:self.currentStatus["playing"]},
-				{ join:artJoin, value:url}
-			]);	
+			//info to data but dont do it if undefined
+			if(status["artist"] != null) {
+				CF.setJoins([
+					{ join:"s"+joinStart, value:self.currentStatus["artist"] + " - " + self.currentStatus["song"]},
+					{ join:albumJoin, value:"album - " + self.currentStatus["album"]},
+					{ join:"d"+joinStart, value:self.currentStatus["playing"]},
+					{ join:artJoin, value:url}
+			]	);	
+			}
 			self.ituneHttp.sendHTTP(self.revision, self.sessionID);
 	
 	}
