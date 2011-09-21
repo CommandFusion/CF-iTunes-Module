@@ -336,6 +336,13 @@ var iTunesInstance = function(instance) {
 								d2: {
 									tokens: {"[cmd]": "8"}
 								}
+							},
+							//add films
+							{
+								s1: "Films",
+								d2: {
+									tokens:{"[cmd]": "9"} 
+								}
 							}]);
 	};
 	
@@ -672,8 +679,11 @@ var iTunesInstance = function(instance) {
 					if (results.length > 0) {
 						for (var i = 0; i < results.length - 1; i++) {
 							//ID for artwork and address
-							var newid = results[i][0]["mcti"];
+							var newid = results[i][0]["miid"];
 							newid = ((newid.charCodeAt(0) << 24) | (newid.charCodeAt(1) << 16) | (newid.charCodeAt(2) << 8) | newid.charCodeAt(3));
+							
+							//getting url for artwork
+							var url = "http://" + getAddress() + ":3689/databases/" + self.dbid + "/items/" + newid + "/extra_data/artwork?mw=43&mh=43&" + sessionParam;
 							
 							if (newid != null) {
 								CF.listAdd(songJoin , [{
@@ -682,6 +692,11 @@ var iTunesInstance = function(instance) {
 									d2: {
 										tokens: {"[id]": encodeToHex(results[i][0]["mcti"]), "[cmd]": "7", "[perid]": encodeToHex(results[i][0]["mper"])}
 									},
+									//tokens for artwork
+									s10: {
+										tokens: {"HTTP:Client-DAAP-Version": 3.10, "HTTP:Viewer-Only-Client": 1},
+										value: url
+									}
 								}]);
 							}
 						}
@@ -719,9 +734,9 @@ var iTunesInstance = function(instance) {
 				}
 		
 			});
-		} else if (command == "8") {
+		} else if ((command == "8") || (command == "9")) {
 		//
-		//Starts getting the playlist databases
+		//Starts getting the playlist databases also the Film databases
 		//
 			CF.listRemove(dbJoin);
 			CF.listRemove(artistJoin);
@@ -747,20 +762,71 @@ var iTunesInstance = function(instance) {
 							newid = ((newid.charCodeAt(0) << 24) | (newid.charCodeAt(1) << 16) | (newid.charCodeAt(2) << 8) | newid.charCodeAt(3));
 							//only display correct kind of dbs
 							if (dbType != "100") {
-							CF.listAdd(dbJoin , [{
-									// add one item
-									s1: decodeURIComponent(escape(results[i][0]["minm"])),
-									d2: {
-										tokens: {"[id]": newid, "[cmd]": "5", "[perid]": encodeToHex(results[i][0]["mper"])}
-									}
-								}]);
+								if(command == "8"){
+									CF.listAdd(dbJoin , [{
+										// add one item
+										s1: decodeURIComponent(escape(results[i][0]["minm"])),
+										d2: {
+												tokens: {"[id]": newid, "[cmd]": "5", "[perid]": encodeToHex(results[i][0]["mper"])}
+										}	
+									}]);
+								}else if(command == "9"){
+									CF.listAdd(dbJoin , [{
+										// add one item
+										s1: decodeURIComponent(escape(results[i][0]["minm"])),
+										d2: {
+												tokens: {"[id]": newid, "[cmd]": "10", "[perid]": encodeToHex(results[i][0]["mper"])}
+										}	
+									}]);
+								}
 							}
 						}
 					}
 				}
 			});
 		
-		}
+		}else if (command=="10") {
+		//
+		//Starts getting the playlists from playlist db
+		//
+			CF.listRemove(artistJoin);
+			CF.listRemove(albumJoin);
+			CF.listRemove(songJoin);
+		
+			self.dbid = id;
+			
+			//dbperid
+			self.dbPerId = perid;
+			
+			
+			request = "databases/" + self.dbid + "/containers";
+			meta = "meta=dmap.itemname,dmap.itemid,dmap.persistentid,daap.songartist,daap.groupalbumcount&type=music&group-type=artists&sort=album&include-sort-headers=1&query=()"
+			
+			sendDAAPRequest(request, [meta, sessionParam], function(result, error) {
+				if (error !== null) {
+					log("Trying to database from ", description());
+					log("Error = " + error);
+				} else {
+					log("Got result:");
+					logObject(result);
+					var results = result[0][0];
+					if (results.length > 0) {
+						for (var i = 0; i < results.length - 1; i++) {
+							//ID for artwork and address
+							var newid = results[i][0]["miid"];
+							newid = ((newid.charCodeAt(0) << 24) | (newid.charCodeAt(1) << 16) | (newid.charCodeAt(2) << 8) | newid.charCodeAt(3));
+							
+							if(results[i][0]["minm"] == "Films"){
+								self.selectDatabase(newid, "6","", encodeToHex(results[i][0]["mper"]));
+							
+							}
+						}
+					}
+				}
+			});
+		
+		
+		} 
 	};
 	
 	self.setVolume = function(volume) {
