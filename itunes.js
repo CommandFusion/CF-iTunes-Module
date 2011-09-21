@@ -343,7 +343,15 @@ var iTunesInstance = function(instance) {
 								d2: {
 									tokens:{"[cmd]": "9"} 
 								}
-							}]);
+							},
+							//add radio
+							{
+								s1: "Radio",
+								d2: {
+									tokens:{"[cmd]": "11"}
+								}
+							}
+							]);
 	};
 	
 	self.selectDatabase = function(id, command, place, perid) {
@@ -607,7 +615,7 @@ var iTunesInstance = function(instance) {
 			});
 			
 			
-		} else if (command=="5") {
+		} else if ((command=="5")) {
 		//
 		//Starts getting the playlists from playlist db
 		//
@@ -622,7 +630,8 @@ var iTunesInstance = function(instance) {
 			
 			
 			request = "databases/" + self.dbid + "/containers";
-			meta = "meta=dmap.itemname,dmap.itemid,dmap.persistentid,daap.songartist,daap.groupalbumcount&type=music&group-type=artists&sort=album&include-sort-headers=1&query=()"
+			
+			meta = "meta=dmap.itemname,dmap.itemid,dmap.persistentid,daap.songartist,daap.groupalbumcount&type=music&group-type=artists&sort=album&include-sort-headers=1&query=()";
 			
 			sendDAAPRequest(request, [meta, sessionParam], function(result, error) {
 				if (error !== null) {
@@ -655,9 +664,9 @@ var iTunesInstance = function(instance) {
 			});
 		
 		
-		} else if (command=="6") {
+		} else if ((command=="6") || (command=="13")) {
 		//
-		//Starts getting the playlist songs from playlist
+		//Starts getting the playlist songs from playlist and radio stations 
 		//
 			CF.listRemove(albumJoin);
 			CF.listRemove(songJoin);
@@ -665,8 +674,13 @@ var iTunesInstance = function(instance) {
 			//set Playlist id
 			self.playlistPerId = perid;
 		
+			
 			request = "databases/" + self.dbid + "/containers/" + id + "/items";
-			meta = "meta=dmap.itemname,dmap.itemid,daap.songartist,daap.songalbum,dmap.containeritemid,dmap.persistentid,com.apple.itunes.has-video,daap.songdisabled,com.apple.itunes.mediakind,daap.songtime&type=music"
+			if(command=="6"){
+				meta = "meta=dmap.itemname,dmap.itemid,daap.songartist,daap.songalbum,dmap.containeritemid,dmap.persistentid,com.apple.itunes.has-video,daap.songdisabled,com.apple.itunes.mediakind,daap.songtime&type=music";
+			} else {
+				meta= "meta=dmap.itemname,dmap.itemid,daap.songartist,daap.songalbum,dmap.containeritemid,com.apple.itunes.has-video,daap.songdisabled,com.apple.itunes.mediakind,daap.songtime,daap.songdescription&type=music";
+			}
 			
 			sendDAAPRequest(request, [meta, sessionParam], function(result, error) {
 				if (error !== null) {
@@ -686,25 +700,40 @@ var iTunesInstance = function(instance) {
 							var url = "http://" + getAddress() + ":3689/databases/" + self.dbid + "/items/" + newid + "/extra_data/artwork?mw=43&mh=43&" + sessionParam;
 							
 							if (newid != null) {
-								CF.listAdd(songJoin , [{
-									// add one item
-									s1: decodeURIComponent(escape(results[i][0]["minm"])),
-									d2: {
-										tokens: {"[id]": encodeToHex(results[i][0]["mcti"]), "[cmd]": "7", "[perid]": encodeToHex(results[i][0]["mper"])}
-									},
-									//tokens for artwork
-									s10: {
-										tokens: {"HTTP:Client-DAAP-Version": 3.10, "HTTP:Viewer-Only-Client": 1},
-										value: url
-									}
-								}]);
+								if(command == 6) {
+									CF.listAdd(songJoin , [{
+										// add one item
+										s1: decodeURIComponent(escape(results[i][0]["minm"])),
+										d2: {
+											tokens: {"[id]": encodeToHex(results[i][0]["mcti"]), "[cmd]": "7", "[perid]": encodeToHex(results[i][0]["mper"])}
+										},
+										//tokens for artwork
+										s10: {
+											tokens: {"HTTP:Client-DAAP-Version": 3.10, "HTTP:Viewer-Only-Client": 1},
+											value: url
+										}
+									}]);
+								}else {
+									CF.listAdd(songJoin , [{
+										// add one item
+										s1: decodeURIComponent(escape(results[i][0]["minm"])),
+										d2: {
+											tokens: {"[id]": encodeToHex(results[i][0]["miid"]), "[cmd]": "14", "[perid]": encodeToHex(results[i][0]["miid"])}
+										},
+										//tokens for artwork
+										s10: {
+											tokens: {"HTTP:Client-DAAP-Version": 3.10, "HTTP:Viewer-Only-Client": 1},
+											value: url
+										}
+									}]);
+								}
 							}
 						}
 					}
 				}
 			});
 		
-		} else if (command == "7") {
+		} else if ((command == "7") || (command == "14")) {
 		//
 		//Starts playing playlist from selected song
 		//
@@ -718,8 +747,11 @@ var iTunesInstance = function(instance) {
 					log("Got Music");
 					//CF.logObject(result);
 					request = "ctrl-int/1/playspec"
-					var cmd = "database-spec='dmap.persistentid:0x" + self.dbPerId + "'&container-spec='dmap.persistentid:0x" + self.playlistPerId +"'&container-item-spec='dmap.containeritemid:0x" + id + "'";
-			
+					if(command=="7"){
+						var cmd = "database-spec='dmap.persistentid:0x" + self.dbPerId + "'&container-spec='dmap.persistentid:0x" + self.playlistPerId +"'&container-item-spec='dmap.containeritemid:0x" + id + "'";
+					} else {
+						var cmd = "database-spec='dmap.itemid:0x" + self.dbPerId + "'&container-spec='dmap.itemid:0x" + self.playlistPerId + "'&item-spec='dmap.itemid:0x" + id + "'";
+					}
 					sendDAAPRequest(request, [cmd, sessionParam], function(result, error) {
 						if (error !== null) {
 							log("Trying to Play from " + description());
@@ -826,7 +858,93 @@ var iTunesInstance = function(instance) {
 			});
 		
 		
-		} 
+		} else if (command=="11") {
+
+		//
+		//Starts getting the radio databases
+		//
+	
+			CF.listRemove(dbJoin);
+			CF.listRemove(artistJoin);
+			CF.listRemove(albumJoin);
+			CF.listRemove(songJoin);
+			
+			sendDAAPRequest("databases", [meta, sessionParam], function(result, error) {
+				if (error !== null) {
+					log("Trying to database from " + description());
+					log("Error = " + error);
+				} else {
+					log("Got Databases:");
+					logObject(result);
+					var results = result[0][0];
+					if (results.length > 0) {
+						for(var i = 0; i < results.length - 1; i++) {
+							//check what kind of database
+							var dbType = results[i][0]["mdbk"];
+							dbType = ((dbType.charCodeAt(0) << 24) | (dbType.charCodeAt(1) << 16) | (dbType.charCodeAt(2) << 8) | dbType.charCodeAt(3));
+							
+							var newid = results[i][0]["miid"];
+							newid = ((newid.charCodeAt(0) << 24) | (newid.charCodeAt(1) << 16) | (newid.charCodeAt(2) << 8) | newid.charCodeAt(3));
+							
+							//only display correct kind of dbs
+							if (dbType == "100") {
+								self.selectDatabase(newid, "12", "", encodeToHex(results[i][0]["miid"]));
+							}
+						}
+					}
+				}
+			});
+
+		}else if ((command=="12")) {
+		//
+		//Starts getting the radio catagories 
+		//
+			CF.listRemove(artistJoin);
+			CF.listRemove(albumJoin);
+			CF.listRemove(songJoin);
+		
+			self.dbid = id;
+			
+			//dbperid
+			self.dbPerId = perid;
+			
+			
+			request = "databases/" + self.dbid + "/containers";
+			
+			meta = "meta=dmap.itemname,dmap.itemcount,dmap.itemid,dmap.persistentid,daap.baseplaylist,com.apple.itunes.special-playlist,com.apple.itunes.smart-playlist,com.apple.itunes.saved-genius,dmap.parentcontainerid,dmap.editcommandssupported,com.apple.itunes.jukebox-current,daap.songcontentdescription";
+			
+			sendDAAPRequest(request, [meta, sessionParam], function(result, error) {
+				if (error !== null) {
+					log("Trying to database from ", description());
+					log("Error = " + error);
+				} else {
+					log("Got result:");
+					logObject(result);
+					var results = result[0][0];
+					if (results.length > 0) {
+						for (var i = 0; i < results.length - 1; i++) {
+							//ID for artwork and address
+							var newid = results[i][0]["miid"];
+							newid = ((newid.charCodeAt(0) << 24) | (newid.charCodeAt(1) << 16) | (newid.charCodeAt(2) << 8) | newid.charCodeAt(3));
+							
+							
+							
+							if (newid != null) {
+								CF.listAdd(artistJoin , [{
+									// add one item
+									s1: decodeURIComponent(escape(results[i][0]["minm"])),
+									d2: {
+										tokens: {"[id]": newid, "[cmd]": "13", "[perid]": encodeToHex(results[i][0]["miid"])}
+									},
+								}]);
+							}
+						}
+					}
+				}
+			});
+		
+		
+		}
 	};
 	
 	self.setVolume = function(volume) {
