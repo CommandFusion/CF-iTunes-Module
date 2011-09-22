@@ -55,7 +55,7 @@ var iTunesInstance = function(instance) {
 
 		service: instance,					// the actual iTunes service description
 		sessionID: "",
-		songStatus: [],
+		songStatus: {},
 		revision: 1,
 		dbid: "",
 	
@@ -64,7 +64,7 @@ var iTunesInstance = function(instance) {
 		
 		//playlist globalvars
 		dbPerId: "",
-		playlistPerId: ""
+		playlistPerId: "",
 	};
 
 	
@@ -1001,8 +1001,8 @@ var iTunesInstance = function(instance) {
 			status["artist"] = result[0][0]["cana"];
 			status["song"] = result[0][0]["cann"];
 			status["album"] = result[0][0]["canl"];
-			
-			
+			status["shuffle"] = result[0][0]["cash"].charCodeAt(0);
+			status["repeat"] = result[0][0]["carp"].charCodeAt(0);
 			
 			
 			if (result[0][0]["caps"].charCodeAt(0) == 3) {
@@ -1027,16 +1027,19 @@ var iTunesInstance = function(instance) {
 			//get volume
 			getVolume();
 				
-			//sets album join
+			//sets joins
 			var albumJoin = "s" + (parseInt(joinStart) + 2)
-				
+			var shuffJoin = "d" + (parseInt(joinStart) + 2)
+			var repeatJoin = "d" + (parseInt(joinStart) + 1)
 			//info to data but dont do it if undefined
 			if(status["artist"] != null) {
 				CF.setJoins([
 					{ join:"s"+joinStart, value:self.currentStatus["artist"] + " - " + self.currentStatus["song"]},
 					{ join:albumJoin, value:"album - " + self.currentStatus["album"]},
 					{ join:"d"+joinStart, value:self.currentStatus["playing"]},
-					{ join:artJoin, value:url}
+					{ join:artJoin, value:url},
+					{ join:shuffJoin, value:self.currentStatus["shuffle"]},
+					{ join:repeatJoin, value:self.currentStatus["repeat"]}
 			]	);	
 			}
 			self.ituneHttp.sendHTTP(self.revision, self.sessionID);
@@ -1093,6 +1096,49 @@ var iTunesInstance = function(instance) {
 						//CF.logObject(result);
 					}
 				});
+				break;
+				
+			case "shuf":
+				if(self.currentStatus["shuffle"] == 1){
+					self.currentStatus["shuffle"] = 0;
+				}else {
+					self.currentStatus["shuffle"]++;
+				}
+				
+				var parma = "dacp.shufflestate=" + self.currentStatus["shuffle"];
+				
+				sendDAAPRequest("ctrl-int/1/setproperty", [parma, sessionParam], function(result,error) {
+					if (error !== null) {
+						log("Trying to shuffle from ", description());
+						log("Error = ", error);
+					} else {
+						log("shuffle ", description());
+						//CF.logObject(result);
+					}
+				});
+				
+				
+				break;
+				
+			case "rpt":
+				if(self.currentStatus["repeat"] == 2){
+					self.currentStatus["repeat"] = 0;
+				}else {
+					self.currentStatus["repeat"]++;
+				}
+				
+				var parma = "dacp.repeatstate=" + self.currentStatus["repeat"];
+				
+				sendDAAPRequest("ctrl-int/1/setproperty", [parma, sessionParam], function(result,error) {
+					if (error !== null) {
+						log("Trying to repeat from ", description());
+						log("Error = ", error);
+					} else {
+						log("repeat ", description());
+						//CF.logObject(result);
+					}
+				});
+			
 				break;
 				
 			default:

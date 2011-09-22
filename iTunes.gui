@@ -100,6 +100,22 @@
       <list j="13" x="350" y="596" w="300" h="140" t="list_FF0080" headerSub="" titleSub="" contentSub="iTunes_Database" footerSub="" orientation="v" l="0" swipedelete="0" />
       <list j="14" x="674" y="597" w="300" h="140" t="list_FF0080" headerSub="" titleSub="" contentSub="iTunes_Database" footerSub="" orientation="v" l="0" swipedelete="0" />
       <list j="15" x="10" y="592" w="300" h="140" t="list_FF0080" headerSub="" titleSub="" contentSub="iTunes_Database" footerSub="" orientation="v" l="0" swipedelete="0" />
+      <btn j="11" x="436" y="108" w="75" h="66" t="btn_sqr_sml" flip="None" sim="1" l="0" s="1" js="itunesAction(&quot;rpt&quot;);">
+        <inactive s="0">
+          <img x="23" y="12" w="32" h="32">transports_sml_32_wht.png</img>
+        </inactive>
+        <active s="0">
+          <img x="23" y="12" w="32" h="32">transports_sml_32_wht.png</img>
+        </active>
+      </btn>
+      <btn j="12" x="366" y="108" w="75" h="66" t="btn_sqr_sml" flip="None" sim="1" l="0" s="1" js="itunesAction(&quot;shuf&quot;);">
+        <inactive s="0">
+          <img x="23" y="12" w="32" h="32">transports_sml_28_wht.png</img>
+        </inactive>
+        <active s="0">
+          <img x="23" y="12" w="32" h="32">transports_sml_28_wht.png</img>
+        </active>
+      </btn>
     </landscape>
   </page>
   <subpage name="iTunes_Instance" w="300" h="40">
