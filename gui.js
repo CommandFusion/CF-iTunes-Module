@@ -81,6 +81,11 @@ function selectDatabase(id) {
 
 }
 
+function searchDatabase(type, searchString) {
+
+	gui.server.searchDatabase(type, searchString);
+
+}
 
 function setVolume(volume) {
 

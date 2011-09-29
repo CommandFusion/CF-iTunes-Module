@@ -32,7 +32,7 @@ String.prototype.lpad = function(padString, length) {
 }
 
 var iTunesGlobals = {
-	daapContainerTypes: "msrv mccr mdcl mlog mupd mlcl mlit apso aply cmst casp cmgt avdb agar agal adbs"
+	daapContainerTypes: "msrv mccr mdcl mlog mupd mlcl mlit apso aply cmst casp cmgt avdb agar agal adbs abro"
 };
 
 /* ---------------------------------------------------------------------
@@ -352,6 +352,66 @@ var iTunesInstance = function(instance) {
 								}
 							}
 							]);
+	};
+	
+	//searches database and returns artists or albums
+	self.searchDatabase = function(type, searchString) {
+	
+		var dbJoin = "l" + (parseInt(gui.joinStart) + 1);
+		var artistJoin = "l" + (parseInt(gui.joinStart) + 2);
+		var albumJoin = "l" + (parseInt(gui.joinStart) + 3);
+		var songJoin = "l" + (parseInt(gui.joinStart) + 4);
+	
+		var sessionParam = "session-id=" + self.sessionID;
+		var request = "";
+		var meta ="";
+		
+		
+		if(type == "artist") {
+		
+			CF.listRemove(artistJoin);
+			CF.listRemove(albumJoin);
+			CF.listRemove(songJoin);
+		
+			//request = "databases/" + self.dbid + "/groups";
+			//meta = "meta=dmap.itemname,dmap.itemid,dmap.persistentid,daap.songartist,daap.groupalbumcount&type=music&group-type=artists&sort=album&include-sort-headers=1&query=('dmap.itemname:*" + searchString + "*')"
+			
+			request = "databases/67/browse/artists";
+			meta = "include-sort-headers=1&filter='daap.songartist:*" + searchString +"*'+('com.apple.itunes.mediakind:1','com.apple.itunes.mediakind:32')+'daap.songartist!:'"
+			sendDAAPRequest(request, [meta, sessionParam], function(result, error) {
+				if (error !== null) {
+					log("Trying to search database from " + description());
+					log("Error = " + error);
+				} else {
+					log("Searched Databases:");
+					
+					var results = result[0][0];
+					logObject(result);
+					var artistNames = result[0][0]["abar"];
+					var prop, propLen, data, rem;
+						//mlit\x00\x00\x00\x0cBass Piratezmlit\x00\x00\x00\x0aBasshunter
+						do {
+							prop = artistNames.substr(0, 4);
+							propLen = (artistNames.charCodeAt(4) << 24) | (artistNames.charCodeAt(5) << 16) | (artistNames.charCodeAt(6) << 8) | artistNames.charCodeAt(7);
+							data = artistNames.substr(8, propLen);
+							rem =  artistNames.substr(8+propLen);
+							
+							CF.listAdd(artistJoin , [{
+									// add one item
+									s1: decodeURIComponent(escape(data)),
+									d2: {
+										tokens: {"[id]": decodeURIComponent(escape(data)), "[cmd]": "2"}
+									},
+								}]);
+							
+							artistNames = rem;
+						} while(artistNames.length >= 8);
+				}
+			});
+			
+		
+		}
+	
 	};
 	
 	self.selectDatabase = function(id, command, place, perid) {

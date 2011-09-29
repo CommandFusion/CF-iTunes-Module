@@ -19,6 +19,7 @@
       <cmd name="SelectSpeakers" js="selectSpeakers(data);" jsSendsCommand="True">[id]</cmd>
       <cmd name="Volume" js="setVolume(data);" jsSendsCommand="True">[sliderval]</cmd>
       <cmd name="SelectDatabase" js="selectDatabase(data);" jsSendsCommand="True">[id]\xFF[cmd]\xFF[place]\xFF[perid]</cmd>
+      <cmd name="searchDataBase" js="searchDatabase(&quot;artist&quot;, data); " jsSendsCommand="True">[inputval]</cmd>
       <fb name="Pairing request" regex="GET /pair\?pairingcode=[0-9A-F]+&amp;servicename=[0-9A-F]+ " />
       <fb name="All traffic" regex=".*" />
     </system>
@@ -30,7 +31,7 @@
     <theme type="background" name=".landscape"><![CDATA[background-color: #8080FF;]]></theme>
     <theme type="button" name=".btn_sqr_sml[state='0']"><![CDATA[padding: 0px 15px 8px 15px; -webkit-border-image: url(btn_sqr_sml_off.png) 0 15 8 15; text-shadow: rgba(255,255,255,1) 1px 1px 1px; color: Black; font-size: 20px; font-family: 'Verdana'; font-weight: bold; font-style: none; text-decoration: none; text-align: center; vertical-align: middle; display: table-cell; box-sizing: border-box; -webkit-box-sizing: border-box; -webkit-tap-highlight-color:rgba(0,0,0,0);]]></theme>
     <theme type="button" name=".btn_sqr_sml[state='1']"><![CDATA[padding: 0px 15px 8px 15px; -webkit-border-image: url(btn_sqr_sml_on.png) 0 15 8 15; text-shadow: rgba(255,255,255,1) 1px 1px 1px; color: Black; font-size: 20px; font-family: 'Verdana'; font-weight: bold; font-style: none; text-decoration: none; text-align: center; vertical-align: middle; display: table-cell; box-sizing: border-box; -webkit-box-sizing: border-box; -webkit-tap-highlight-color:rgba(0,0,0,0);]]></theme>
-    <theme type="input" name=".input_blank"><![CDATA[ border-width: 0px; color: White; font-size: 12px; font-family: 'Arial'; text-align: left; vertical-align: middle; font-weight: bold; font-style: none; text-decoration: none; display: table-cell;]]></theme>
+    <theme type="input" name=".input_blank"><![CDATA[ background-color: White; border-width: 0px; color: #000000; font-size: 12px; font-family: 'Arial'; text-align: center; vertical-align: middle; font-weight: bold; font-style: none; text-decoration: none; display: table-cell;]]></theme>
     <theme type="text" name=".Title_C"><![CDATA[ text-shadow: rgba(0,0,0,1) 1px -1px 1px; color: White; font-size: 24px; font-family: 'Arial'; text-align: center; vertical-align: middle; font-weight: bold; font-style: none; text-decoration: none; display: table-cell;]]></theme>
     <theme type="text" name=".List_Item"><![CDATA[ color: White; font-size: 14px; font-family: 'Arial'; text-align: left; vertical-align: middle; font-weight: normal; font-style: none; text-decoration: none; display: table-cell;]]></theme>
     <theme type="gauge" name=".Slider[state='0']"><![CDATA[ background-image: url(gauge-02-i.png);]]></theme>
@@ -116,6 +117,7 @@
           <img x="23" y="12" w="32" h="32">transports_sml_28_wht.png</img>
         </active>
       </btn>
+      <input j="0" s="999" x="839" y="377" w="100" h="23" pass="0" autoFocus="0" f="0" t="input_blank" command="searchDataBase" l="0">Artists</input>
     </landscape>
   </page>
   <subpage name="iTunes_Instance" w="300" h="40">
